@@ -240,6 +240,30 @@ dashboardPage(
               )
             )
           )
+        ),
+        fluidRow(
+          box(
+            title = tags$b("Attrition over time"),
+            width = 12,
+            tabBox(
+              width = 12,
+              tabPanel("Attrition rates"),
+              tabPanel("Accumulated risk"),
+              tabPanel("Accumulated incidence")
+            )
+          )
+        ),
+        fluidRow(
+          box(
+            title = tags$b("Summary statistics"),
+            width = 12,
+            tabBox(
+              width = 12,
+              tabPanel("Attrition rates"),
+              tabPanel("Accumulated risk"),
+              tabPanel("Accumulated incidence")
+            )
+          )
         )
       ),
       

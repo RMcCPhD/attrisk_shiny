@@ -1,4 +1,4 @@
-Attrition is a common occurrence during randomised controlled trials (hereafter trials) that can threaten trial validity. 
+Attrition is common during randomised controlled trials (hereafter trials) and can threaten trial validity. 
 
 Ideally, trialists would be able to prevent attrition before it happens. This would decrease the workload required to mitigate attrition, such as dealing with missing data, and ultimately benefit trial operations, outcomes and perceptions. 
 

@@ -1,0 +1,11 @@
+Attrition is a common occurrence during randomised controlled trials (hereafter trials) that can threaten trial validity. 
+
+Ideally, trialists would be able to prevent attrition before it happens. This would decrease the workload required to mitigate attrition, such as dealing with missing data, and ultimately benefit trial operations, outcomes and perceptions. 
+
+It is currently unclear what methods are effective for preventing attrition, particularly in ways that are generalisable to trials as a whole.
+
+AttRisk aims to address this methodological gap by allowing trialists to predict risk of attrition during trial design and conduct. During trial design, trialists can evaluate how different trial design features impact attrition risk. During trial conduct, trialists can examine risk of attrition for individual participants partaking in trials with a particular set of design features.
+
+This version of AttRisk has been built on models fitted to data from type 2 diabetes mellitus trials. This serves as a starting point for expanding the application of AttRisk to other clinical contexts. 
+
+The ultimate goal of AttRisk is a tool applicable to any clinical context for which data are available to model risk of attrition. We believe this would be a powerful tool to enhance decision making around participant retention.

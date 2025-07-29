@@ -1,0 +1,28 @@
+
+
+/* Reduce space between input blocks */
+.shiny-input-container {
+  margin-bottom: 6px;
+}
+
+/* Reduce vertical spacing inside form groups */
+.form-group {
+  margin-bottom: 6px;
+}
+
+/* Reduce padding in the box */
+.box {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* Tighten radio buttons and checkboxes */
+.radio, .checkbox {
+  margin-top: 2px;
+  margin-bottom: 2px;
+}
+
+/* Optional: shrink heading spacing */
+.box-title {
+  margin-bottom: 10px;
+}

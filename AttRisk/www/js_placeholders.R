@@ -4,6 +4,8 @@
 tags$head(
   tags$script(HTML(
   "    
+        /* Add greyed out text to numeric input boxes */
+        
         $(document).on('shiny:connected', function(){
           $('#duration').attr('placeholder', 'Total (2 - 260)');
         });
@@ -59,6 +61,24 @@ tags$head(
         $(document).on('shiny:connected', function(){
           $('#comorbs').attr('placeholder', 'Total (0 - 20)');
         });
+        
+        
+        /* Create action signalling a reset of inputs for design or conduct */
+        
+        Shiny.addCustomMessageHandler('resetBox', function(id) {
+          const box = document.getElementById(id);
+          if (box) {
+            const inputs = box.querySelectorAll('input, select, textarea');
+            inputs.forEach(el => {
+              if (el.type === 'checkbox' || el.type === 'radio') {
+                el.checked = el.defaultChecked;
+              } else {
+                  el.value = el.defaultValue;
+              }
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+  });
   "
   ))
 )

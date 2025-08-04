@@ -40,9 +40,13 @@ inputs <- list(
 
 # Create tibble
 input_tbl <- as_tibble(bind_rows(inputs)) %>%
-  mutate(across(c(who_reg, trttype), ~ paste0(unique(.), collapse = ", "))) %>% 
-  mutate(across(everything(), as.character)) %>%
+  mutate(
+    across(c(who_reg, trttype), ~ if_else(. == "", NA, .)),
+    across(c(who_reg, trttype), ~ paste0(unique(.), collapse = ", ")),
+    across(everything(), as.character)
+  ) %>%
   pivot_longer(everything()) %>%
+  filter(value != "NA") %>% 
   distinct() %>%
   arrange()
 
@@ -69,6 +73,9 @@ input_tidy <- input_tbl %>%
       # BMI limits as binary value
       (name == "min_bmi" | name == "max_bmi") & value != "None" & !is.na(value)  ~ "1",
       (name == "min_bmi" | name == "max_bmi") & value == "None" & !is.na(value)  ~ "0",
+      # Phase as binary values
+      name == "phase" & value == "3" ~ "0",
+      name == "phase" & value == "4" ~ "1",
       # POM as ordinal variable
       name == "one_pom" & value != "1" & !is.na(value)  ~ "1",
       name == "one_pom" & value == "1" & !is.na(value)  ~ "0",
@@ -110,4 +117,36 @@ input_betas <- input_param %>%
   left_join(
     readRDS("AttRisk/www/data/sum_draws_shiny.rds") %>% 
       filter(!param %in% c("a", "mu1"))
+  ) %>% 
+  mutate(value = as.numeric(value))
+
+# Linear predictor for shape ---------------------------------------------------
+
+# Linear model with LASSO shrinkage
+
+# Take coefficients with 
+
+# Estimate Gompertz parameters -------------------------------------------------
+
+# Import required data
+a_imp_params <- readRDS()
+a_imp_pos <- readRDS("AttRisk/www/data/sum_draws_shiny.rds")
+
+# Compute rate linear predictor
+rate_lp <- as.matrix(input_betas[,-1])
+rate_lp_mean <- sum(rate_lp[, "value"] * rate_lp[, "mean_param"])
+rate_lp_q2.5 <- sum(rate_lp[, "value"] * rate_lp[, "q2.5_param"])
+rate_lp_q97.5 <- sum(rate_lp[, "value"] * rate_lp[, "q97.5_param"])
+
+# Estimate rate
+est_rate <- a_imp_pos %>% 
+  filter(param == "mu1") %>% 
+  mutate(
+    log_rate_mean = mean_param + rate_lp_mean[[1]],
+    log_rate_q2.5 = mean_param + rate_lp_q2.5[[1]],
+    log_rate_q97.5 = mean_param + rate_lp_q97.5[[1]],
+    rate_mean = exp(log_rate_mean),
+    rate_q2.5 = exp(log_rate_q2.5),
+    rate_q97.5 = exp(log_rate_q97.5)
   )
+

@@ -203,7 +203,7 @@ dashboardPage(
                   width = "170px"
                 ),
                 numericInput(
-                  "mean_dbp", "Diastolic BP (mmHg)",
+                  "mean_sbp", "Systolic BP (mmHg)",
                   value = NA, min = 60, max = 80,
                   width = "170px"
                 ),
@@ -260,7 +260,7 @@ dashboardPage(
             title = tags$b("Attrition over time"),
             width = 6,
             tabBox(
-              width = 2,
+              width = 12,
               tabPanel("Attrition rates"),
               tabPanel("Accumulated risk"),
               tabPanel("Accumulated incidence")
@@ -270,7 +270,7 @@ dashboardPage(
             title = tags$b("Summary statistics"),
             width = 6,
             tabBox(
-              width = 2,
+              width = 12,
               tabPanel("Attrition rates"),
               tabPanel("Accumulated risk"),
               tabPanel("Accumulated incidence")

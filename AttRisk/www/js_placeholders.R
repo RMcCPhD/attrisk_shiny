@@ -31,7 +31,7 @@ tags$head(
         });
         
         $(document).on('shiny:connected', function(){
-          $('#mean_dbp').attr('placeholder', 'Mean (60 - 80)');
+          $('#mean_sbp').attr('placeholder', 'Mean (120 - 140)');
         });
         
         $(document).on('shiny:connected', function(){

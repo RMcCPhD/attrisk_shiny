@@ -5,7 +5,7 @@ library(tidyverse)
 
 # Import placeholders, css etc.
 # For readability this is kept separate to ui.R
-js_placeholders <- source("www/js_placeholders.R")$value
+js_placeholders <- source("www/scripts/js_placeholders.R")$value
 
 # Define dashboard layout
 dashboardPage(
@@ -261,9 +261,9 @@ dashboardPage(
             width = 6,
             tabBox(
               width = 12,
-              tabPanel("Attrition rates"),
-              tabPanel("Accumulated risk"),
-              tabPanel("Accumulated incidence")
+              tabPanel("Attrition rates", plotOutput("plot_hazard")),
+              tabPanel("Accumulated risk", plotOutput("plot_chaz")),
+              tabPanel("Accumulated incidence", plotOutput("plot_cind"))
             )
           ),
           box(

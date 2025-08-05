@@ -22,25 +22,10 @@ inputs <- list(
   blinding     = "Open label"
 )
 
-inputs <- list(
-  duration     = 26,
-  n_log        = NULL,
-  n_facilities = NULL,
-  n_arms       = NULL,
-  age_lower    = NULL,
-  age_upper    = NULL,
-  min_bmi      = "None",
-  max_bmi      = "None",
-  who_reg      = c("Regions of the Americas", "European region"),
-  one_pom      = 2L,
-  trttype      = c("Placebo", "Active comparator"),
-  phase        = 3L,
-  blinding     = "Open label"
-)
-
 # Create tibble
 input_tbl <- as_tibble(bind_rows(inputs)) %>%
   mutate(
+    duration = if_else(is.na(duration), 26, duration),
     across(c(who_reg, trttype), ~ if_else(. == "", NA, .)),
     across(c(who_reg, trttype), ~ paste0(unique(.), collapse = ", ")),
     across(everything(), as.character)
@@ -120,16 +105,9 @@ input_betas <- input_param %>%
   ) %>% 
   mutate(value = as.numeric(value))
 
-# Linear predictor for shape ---------------------------------------------------
+# Estimate rate ----------------------------------------------------------------
 
-# Linear model with LASSO shrinkage
-
-# Take coefficients with 
-
-# Estimate Gompertz parameters -------------------------------------------------
-
-# Import required data
-a_imp_params <- readRDS()
+# Import summarised posterior draws
 a_imp_pos <- readRDS("AttRisk/www/data/sum_draws_shiny.rds")
 
 # Compute rate linear predictor
@@ -148,5 +126,134 @@ est_rate <- a_imp_pos %>%
     rate_mean = exp(log_rate_mean),
     rate_q2.5 = exp(log_rate_q2.5),
     rate_q97.5 = exp(log_rate_q97.5)
+  ) %>% 
+  pivot_longer(-param)
+
+# Linear predictor for shape ---------------------------------------------------
+
+# Extract log-rate
+ext_lograte <- est_rate %>% 
+  filter(grepl("log", name)) %>% 
+  select(-param) %>% 
+  rename(param = name)
+
+# Get user-inputted values
+ext_inputs <- input_betas %>% select(param, value)
+
+# Get shrinkage betas and names
+imp_shape_betas <- readRDS("data/lm_res_shrinkage.rds")
+
+get_shape_betas <- ext_lograte %>% 
+  filter(param == "log_rate_mean") %>% 
+  mutate(param = "rate") %>% 
+  rbind(ext_inputs) %>% 
+  left_join(
+    read_csv("data/lm_res.csv") %>% 
+      select(term) %>% 
+      filter(!term == "(Intercept)") %>% 
+      cbind(tibble(beta = imp_shape_betas$betas)) %>% 
+      rename(param = term)
   )
+
+# Separate rate beta
+get_shape_rate_beta <- get_shape_betas %>% slice(1)
+
+# Get linear predictor for shape
+shape_lp <- get_shape_betas %>% 
+  slice(-1) %>% 
+  mutate(lp = value * beta) %>% 
+  reframe(lp = sum(lp))
+
+# Get error from random sample, mean of 0 and scale of residSD
+get_error <- rnorm(1, mean = 0, sd = imp_shape_betas$resid_sd)
+
+# Estimate shape
+shape_beta <- get_shape_rate_beta$beta
+
+est_shape <- ext_lograte %>% 
+  rename(rates = param) %>% 
+  rowwise() %>% 
+  mutate(shapes = value * shape_beta + shape_lp + get_error) %>% 
+  ungroup()
+
+# Prepare Gompertz parameters --------------------------------------------------
+
+# Tidy parameters
+# Exponentiate rate
+tidy_params <- est_shape %>% 
+  mutate(
+    shapes = unlist(shapes),
+    rates = gsub("log_rate_", "", rates),
+    rates_exp = exp(value)
+  ) %>% 
+  rename(
+    est = rates,
+    log_rates = value,
+    rates = rates_exp
+  ) %>% 
+  select(est, log_rates, rates, shapes)
+
+# Sequence times from user input, get as tibble
+seq_times <- input_betas %>% filter(param == "duration") %>% select(value)
+seq_times <- seq_times$value
+seq_times <- tibble(t = seq(0, seq_times, by = 0.1))
+
+# Estimate hazard, cumulative risk and cumulative incidence
+est_gomp <- seq_times %>%
+  left_join(tidy_params %>% crossing(seq_times)) %>% 
+  arrange(t) %>% 
+  mutate(
+    haz = unlist(
+      pmap(
+        list(t = t, rate = rates, shape = shapes),
+        function(t, rate, shape) {
+          flexsurv::hgompertz(t, shape, rate)
+        }
+      )
+    ),
+    chaz = unlist(
+      pmap(
+        list(t = t, rate = rates, shape = shapes),
+        function(t, rate, shape) {
+          flexsurv::Hgompertz(t, shape, rate)
+        }
+      )
+    ),
+    incid = unlist(
+      pmap(
+        list(t = t, rate = rates, shape = shapes),
+        function(t, rate, shape) {
+          flexsurv::pgompertz(t, shape, rate)
+        }
+      )
+    )
+  )
+
+# Plots
+plot_haz <- est_gomp %>% 
+  select(est, t, haz) %>% 
+  pivot_wider(names_from = "est", values_from = "haz") %>% 
+  ggplot(aes(x = t*52, y = mean)) +
+  geom_line() +
+  scale_x_continuous(n.breaks = 8) +
+  labs(x = "Duration in weeks", y = "Hazard rate") +
+  theme_bw()
+
+plot_chaz <- est_gomp %>% 
+  select(est, t, chaz) %>% 
+  pivot_wider(names_from = "est", values_from = "chaz") %>% 
+  ggplot(aes(x = t*52, y = mean)) +
+  geom_line() +
+  scale_x_continuous(n.breaks = 8) +
+  labs(x = "Duration in weeks", y = "Accumulated hazard rate") +
+  theme_bw()
+
+plot_incid <- est_gomp %>% 
+  select(est, t, incid) %>% 
+  pivot_wider(names_from = "est", values_from = "incid") %>% 
+  ggplot(aes(x = t*52, y = mean)) +
+  geom_step() +
+  scale_x_continuous(n.breaks = 8) +
+  labs(x = "Duration in weeks", y = "Accumulated incidence") +
+  theme_bw()
 

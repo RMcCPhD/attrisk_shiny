@@ -17,6 +17,8 @@ dashboardPage(
       id = "tabs", selected = "home",
       menuItem("Home", tabName = "home"),
       menuItem("User guide", tabName = "guide"),
+      menuItem("Trial design", tabName = "predict_design"),
+      menuItem("Trial conduct", tabName = "predict_conduct"),
       menuItem("Predict", tabName = "predict"),
       menuItem("Convert", tabName = "convert"),
       menuItem("About", tabName = "about")
@@ -35,6 +37,18 @@ dashboardPage(
       tabItem(
         tabName = "guide",
         h2(tags$b("User guide"))
+      ),
+      
+      tabItem(
+        tabName = "predict_design",
+        h2(tags$b("Predict attrition risk: Trial design"))
+        
+      ),
+      
+      tabItem(
+        tabName = "predict_conduct",
+        h2(tags$b("Predict attrition risk: Trial conduct"))
+        
       ),
       
       tabItem(

@@ -1,0 +1,22 @@
+
+
+/* Colouring for columns of user inputs */
+.column-card {
+  background-color: #f7f8fa;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Bold labels */
+.column-card .control-label,
+.column-card label {
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+.column-card:focus-within {
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.06), 
+              0 2px 6px rgba(0,0,0,0.12);
+}

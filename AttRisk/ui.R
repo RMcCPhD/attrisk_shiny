@@ -3,15 +3,9 @@ library(shiny)
 library(shinydashboard)
 library(tidyverse)
 
-# Import placeholders, css etc.
-# For readability this is kept separate to ui.R
-js_placeholders <- source("www/scripts/js_placeholders.R")$value
-
 # Define dashboard layout
 dashboardPage(
-  dashboardHeader(
-    title = "AttRisk"
-  ),
+  dashboardHeader(title = "AttRisk"),
   dashboardSidebar(
     sidebarMenu(
       id = "tabs", selected = "home",
@@ -26,7 +20,8 @@ dashboardPage(
   ),
   dashboardBody(
     
-    js_placeholders,
+    # Javascript placeholders and css customisation
+    tags$head(tags$script(src = "scripts/mods/input_mods.js")),
     
     tabItems(
       tabItem(
@@ -41,8 +36,138 @@ dashboardPage(
       
       tabItem(
         tabName = "predict_design",
-        h2(tags$b("Predict attrition risk: Trial design"))
-        
+        h2(tags$b("Predict attrition risk: Trial design")),
+        fluidRow(
+          box(
+            title = tags$b("Trial design features"),
+            div(
+              id = "design_box",
+              column(
+                width = 3,
+                numericInput(
+                  "duration", "Duration (weeks)",
+                  value = NA, min = 2, max = 260,
+                  width = "170px"
+                ),
+                numericInput(
+                  "sample", "Sample size",
+                  value = NA, min = 30, max = 20000,
+                  width = "170px"
+                ),
+                numericInput(
+                  "facilities", "Number of sites",
+                  value = NA, min = 1, max = 500,
+                  width = "170px"
+                ),
+                numericInput(
+                  "arms", "Number of arms",
+                  value = NA, min = 2, max = 6,
+                  width = "170px"
+                ),
+                actionButton(
+                  "reset_design", "Reset design features", 
+                  class = "btn-warning",
+                  width = "170px",
+                  style = "font-weight: bold; color:white; font-size:125%%"
+                )
+              ),
+              
+              column(
+                width = 3,
+                radioButtons(
+                  "age_lower", "Lower age limits",
+                  c("18yr", ">18yr"),
+                  inline = TRUE,
+                  selected = character(0)
+                ),
+                radioButtons(
+                  "age_upper", "Upper age limits",
+                  c("70yr", ">70yr"),
+                  inline = TRUE,
+                  selected = character(0)
+                ),
+                radioButtons(
+                  "bmi_lower", "Lower bmi limits",
+                  c("None", ">=20 kg/m2"),
+                  inline = TRUE,
+                  selected = character(0)
+                ),
+                radioButtons(
+                  "bmi_upper", "Upper bmi limits",
+                  c("None", "<45 kg/m2"),
+                  inline = TRUE,
+                  selected = character(0)
+                ),
+                div(style = "height: 53px;"),
+                actionButton(
+                  "predict_design", "Predict (design)", 
+                  class = "btn-success",
+                  width = "170px",
+                  style = "font-weight: bold; color:white; font-size:125%%"
+                )
+              ),
+              
+              column(
+                width = 3,
+                checkboxGroupInput(
+                  "who_reg", "WHO regions involved",
+                  c(
+                    "African region", "Regions of the Americas",
+                    "Eastern Medi. region", "European region",
+                    "SE Asian region", "Western Pacific region"
+                  )
+                ),
+                radioButtons(
+                  "poms", "Number of POMs",
+                  c("1", ">1"),
+                  inline = TRUE,
+                  selected = character(0)
+                )
+              ),
+              
+              column(
+                width = 3,
+                checkboxGroupInput(
+                  "trttype", "Comparators",
+                  c("Placebo", "Active comparator")
+                ),
+                radioButtons(
+                  "phase", "Phase",
+                  c("3", "4"),
+                  inline = TRUE,
+                  selected = character(0)
+                ),
+                radioButtons(
+                  "blind", "Blinding type",
+                  c("Open label", "Double", "Triple", "Quadruple"),
+                  selected = character(0)
+                )
+              )
+            )
+          )
+        ),
+        fluidRow(
+          box(
+            title = tags$b("Attrition over time"),
+            width = 6,
+            tabBox(
+              width = 12,
+              tabPanel("Attrition rates", plotOutput("plot_hazard")),
+              tabPanel("Accumulated risk", plotOutput("plot_chaz")),
+              tabPanel("Accumulated incidence", plotOutput("plot_cind"))
+            )
+          ),
+          box(
+            title = tags$b("Summary statistics"),
+            width = 6,
+            tabBox(
+              width = 12,
+              tabPanel("Attrition rates"),
+              tabPanel("Accumulated risk"),
+              tabPanel("Accumulated incidence")
+            )
+          )
+        )
       ),
       
       tabItem(

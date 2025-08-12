@@ -1,9 +1,6 @@
 
-# Adds greyed out text to bl participant numeric input boxes
-# Indicates values should be means and gives range of permitted values
 tags$head(
-  tags$script(HTML(
-  "    
+  tags$script(HTML("    
         /* Add greyed out text to numeric input boxes */
         
         $(document).on('shiny:connected', function(){
@@ -79,6 +76,5 @@ tags$head(
       });
     }
   });
-  "
-  ))
+  "))
 )

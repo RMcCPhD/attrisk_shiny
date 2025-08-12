@@ -2,20 +2,20 @@
 // Config
 const UI_HELPERS_CONFIG = {
   placeholders: {
-    duration:   'Total (2 - 260)',
-    sample:     'Total (30 - 20,000)',
-    facilities: 'Total (1 - 500)',
-    arms:       'Total (2 - 6)',
-    mean_age:   'Mean (18 - 150)',
-    mean_bmi:   'Mean (18 - 50)',
-    mean_sbp:   'Mean (120 - 140)',
-    mean_hdl:   'Mean (1 - 4)',
-    mean_total: 'Mean (1 - 4)',
-    mean_t2dur: 'Mean (0.01 - 50)',
-    mean_hba1c: 'Mean (6 - 9)',
-    mean_egfr:  'Mean (60 - 120)',
-    con_med:    'Total (0 - 20)',
-    comorbs:    'Total (0 - 20)'
+    duration:    'Total (2 - 260)',
+    sample:      'Total (30 - 20,000)',
+    facilities:  'Total (1 - 500)',
+    arms:        'Total (2 - 6)',
+    mean_age:    'Mean (18 - 100)',
+    mean_bmi:    'Mean (18 - 50)',
+    mean_sbp:    'Mean (60 - 140)',
+    mean_hdl:    'Mean (1 - 4)',
+    mean_total:  'Mean (1 - 4)',
+    mean_t2dur:  'Mean (0.01 - 50)',
+    mean_hba1c:  'Mean (6 - 9)',
+    mean_egfr:   'Mean (60 - 120)',
+    con_med:     'Total (0 - 20)',
+    comorbs:     'Total (0 - 20)'
   }
 };
 

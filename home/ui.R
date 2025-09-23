@@ -20,7 +20,7 @@ dashboardPage(
       tags$style(HTML("
         .prompt-box {
           margin: 150px auto;
-          max-width: 600px;
+          max-width: 600px;git ad
           padding: 40px;
           border-radius: 20px;
           box-shadow: 0 4px 12px rgba(0,0,0,0.15);

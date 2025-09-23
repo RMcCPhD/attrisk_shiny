@@ -7,8 +7,8 @@ library(tidyverse)
 function(input, output, session) {
   
   # Sourced scripts for server functionality
-  source("www/scripts/design_user_inputs.R") # Prepare inputs, join betas
-  source("www/scripts/design_predict.R") # Gompertz predictions
+  source("R/design_user_inputs.R") # Prepare inputs, join betas
+  source("R/design_predict.R") # Gompertz predictions
   
   # Conditionally enable or disable action buttons -----------------------------
   
@@ -33,6 +33,7 @@ function(input, output, session) {
     
     # Conditions for design and conduct action buttons
     design_ready <- !is.na(input$duration) & input$duration != ""
+    design_ready2 <- !is.na(input$duration2) & input$duration2 != ""
     conduct_ready <- any(!is.na(conduct_inputs) & conduct_inputs != "")
     
     # Design action buttons
@@ -48,13 +49,21 @@ function(input, output, session) {
       updateActionButton(session, "reset_design", "Enter duration")
     }
     
+    if (design_ready2) {
+      shinyjs::enable("reset_design2")
+      updateActionButton(session, "reset_design2", "Reset design features")
+    } else {
+      shinyjs::disable("reset_design2")
+      updateActionButton(session, "reset_design2", "Enter duration")
+    }
+    
     # Conduct action buttons
-    if (conduct_ready && design_ready) {
+    if (conduct_ready && design_ready2) {
       shinyjs::enable("predict_conduct")
       shinyjs::enable("reset_conduct")
       updateActionButton(session, "predict_conduct", "Predict (conduct)")
       updateActionButton(session, "reset_conduct", "Reset characteristics")
-    } else if (design_ready && !conduct_ready) {
+    } else if (design_ready2 && !conduct_ready) {
       shinyjs::disable("predict_conduct")
       shinyjs::disable("reset_conduct")
       updateActionButton(session, "predict_conduct", "Enter a characteristic")
@@ -71,8 +80,8 @@ function(input, output, session) {
   
   # Value thresholds
   value_limits <- list(
-    duration   = c(2, 260),
-    sample     = c(30, 20000),
+    duration   = c(12, 52),
+    sample     = c(30, 500),
     facilities = c(1, 500),
     arms       = c(2, 6),
     mean_age   = c(18, 100),
@@ -129,24 +138,75 @@ function(input, output, session) {
   # Get Gompertz predictions
   design_predict <- predict_design(design_inputs)
   
-  # Render plots in tab boxes
+  # Render plot
   output$plot_hazard_design <- renderPlot({
     design_predict() %>% 
       select(est, t, haz) %>% 
       pivot_wider(names_from = "est", values_from = "haz") %>% 
-      ggplot(aes(x = t*52, y = mean)) +
+      mutate(val = mean/max(mean)) %>% 
+      ggplot(aes(x = t, y = val)) +
       geom_line() +
       scale_x_continuous(n.breaks = 8) +
-      labs(x = "Duration in weeks", y = "Hazard rate") +
-      theme_bw()
-  })
-  
-  # Print in console to check it works (comment out after)
-  observeEvent(input$predict_design, {
-    print(design_predict())
+      labs(x = "Follow-up time (weeks)", y = "Scaled to highest point (1 = peak)") +
+      theme_classic() +
+      theme(
+        axis.text = element_text(size = 15, face = "bold"),
+        axis.title = element_text(size = 15, face = "bold")
+      )
   })
   
   # Predict conduct ------------------------------------------------------------
+  
+  # Clear inputs when reset buttons are used
+  observeEvent(input$reset_design, {
+    session$sendCustomMessage("resetBox", "design_box")
+  })
+  
+  observeEvent(input$reset_conduct, {
+    session$sendCustomMessage("resetBox", "conduct_box")
+  })
+  
+  # Prepare user inputs
+  design_inputs <- tidy_inputs(input)
+  
+  # Get Gompertz predictions
+  design_predict <- predict_design(design_inputs)
+  
+  # Render plot
+  output$plot_hazard_conduct <- renderPlot({
+    design_predict() %>% 
+      select(est, t, haz) %>% 
+      pivot_wider(names_from = "est", values_from = "haz") %>% 
+      mutate(val = mean/max(mean)) %>% 
+      ggplot(aes(x = t * 52, y = val)) +
+      geom_line() +
+      scale_x_continuous(n.breaks = 8) +
+      labs(x = "Duration in weeks", y = "Scaled attrition rate") +
+      theme_bw()
+  })
+  
+  # Render summary statistics
+  output$sum_design <- renderTable({
+    design_predict() %>% 
+      filter(est == "mean") %>% 
+      select(est, t, haz, S, H) %>% 
+      pivot_wider(names_from = "est", values_from = "haz") %>% 
+      mutate(t = t) %>% 
+      rename(
+        `Follow-up time (weeks)` = t
+      ) %>% 
+      mutate(
+        `Sample` = input$sample,
+        `Participants at risk of attrition` = round(`Sample` * S),
+        `Number of attrition events` = round(Sample * (lag(S, default = 1) - S)),
+        `Cumulative attrition events` = round(`Sample` * (1 - S))
+      ) %>% 
+      select(-S, -Sample) %>% 
+      select(
+        `Follow-up time (weeks)`, `Participants at risk of attrition`,
+        `Number of attrition events`, `Cumulative attrition events`
+      )
+  })
   
   # About ----------------------------------------------------------------------
   

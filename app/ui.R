@@ -22,12 +22,11 @@ dashboardPage(
     # Use shinyjs
     useShinyjs(),
     
-    # Javascript placeholders and css customisation
+    # Javascript placeholders (greyed-out text in input boxes)
     tags$head(tags$script(src = "style/input_mods.js")),
     
     # Add inner scroll box for summary statistics
     tags$head(tags$style(HTML("
-      /* Scope to this row so we don't affect other boxes */
       #design-row .box { display: flex; flex-direction: column; }
       #design-row .box .box-body { flex: 1 1 auto; overflow: auto; }"))),
     
@@ -51,7 +50,7 @@ dashboardPage(
       
       tabItem(
         tabName = "predict_design",
-        h2(tags$b("Trial design: Predict attrition risk")),
+        # h3(tags$b("Trial design: Predict attrition risk")),
         fluidRow(
           box(
             title = tags$b("Trial design features"),
@@ -61,12 +60,12 @@ dashboardPage(
                 width = 3,
                 numericInput(
                   "duration", "Duration (weeks)",
-                  value = NA, min = 2, max = 26,
+                  value = NA, min = 12, max = 260,
                   width = "170px"
                 ),
                 numericInput(
                   "sample", "Sample size",
-                  value = NA, min = 30, max = 500,
+                  value = NA, min = 30, max = 1000,
                   width = "170px"
                 ),
                 numericInput(
@@ -84,38 +83,10 @@ dashboardPage(
                   class = "btn-warning",
                   width = "170px",
                   style = "font-weight: bold; color:white; font-size:125%%"
-                )
-              ),
-              
-              column(
-                width = 3,
-                radioButtons(
-                  "age_upper", "Upper age limits",
-                  c("70yr", ">70yr"),
-                  inline = TRUE,
-                  selected = character(0)
                 ),
-                radioButtons(
-                  "bmi_upper", "Upper bmi limits",
-                  c("None", "<45 kg/m2"),
-                  inline = TRUE,
-                  selected = character(0)
-                ),
-                radioButtons(
-                  "egfr_upper", "Upper eGFR limits",
-                  c("None", "<=60 ml/min/1.73m2", ">60 ml/min/1.73m2"),
-                  inline = FALSE,
-                  selected = character(0)
-                ),
-                radioButtons(
-                  "phase", "Phase",
-                  c("3", "4"),
-                  inline = TRUE,
-                  selected = character(0)
-                ),
-                div(style = "height: 4px;"),
+                div(style = "height: 15px;"),
                 actionButton(
-                  "predict_design", "Predict (design)", 
+                  "predict_design", "Predict risk", 
                   class = "btn-success",
                   width = "170px",
                   style = "font-weight: bold; color:white; font-size:125%%"
@@ -143,19 +114,52 @@ dashboardPage(
                   selected = character(0)
                 ),
                 radioButtons(
-                  "poms", "Number of POMs",
-                  c("1", ">1"),
+                  "phase", "Phase",
+                  c("3", "4"),
                   inline = TRUE,
                   selected = character(0)
+                ),
+                div(style = "height: 5px;"),
+                checkboxInput(
+                  "uncertainty", "Show uncertainty on plots",
+                  NULL
                 )
               ),
               
               column(
                 width = 3,
+                radioButtons(
+                  "age_upper", "Upper age limits",
+                  c("70yr", ">70yr"),
+                  inline = TRUE,
+                  selected = character(0)
+                ),
+                radioButtons(
+                  "bmi_upper", "Upper bmi limits",
+                  c("None", "<45 kg/m2"),
+                  inline = TRUE,
+                  selected = character(0)
+                ),
+                radioButtons(
+                  "egfr_upper", "Upper eGFR limits",
+                  c("None", "<=60 ml/min/1.73m2", ">60 ml/min/1.73m2"),
+                  inline = FALSE,
+                  selected = character(0)
+                ),
+                radioButtons(
+                  "poms", "Number of POMs",
+                  c("1", ">1"),
+                  inline = TRUE,
+                  selected = character(0)
+                ),
                 checkboxGroupInput(
                   "trttype", "Comparators",
                   c("Placebo", "Active comparator")
-                ),
+                )
+              ),
+              
+              column(
+                width = 3,
                 radioButtons(
                   "blind", "Blinding type",
                   c("Open label", "Double", "Triple", "Quadruple"),
@@ -177,7 +181,7 @@ dashboardPage(
           id = "design-row",
           width = 12,
           box(
-            title = tags$b("Attrition over time"),
+            title = tags$b("Attrition risk over time"),
             width = 6,
             height = 462,
             plotOutput("plot_hazard_design", height = "100%")
@@ -186,9 +190,20 @@ dashboardPage(
             title = tags$b("Summary statistics"),
             width = 6,
             height = 462,
-            style = "height:100%; overflow-y: scroll",
-            tableOutput("sum_design")
+            style = "height: 100%; overflow-y: auto",
+            tabBox(
+              width = 6,
+              tabPanel("Risk overview", tableOutput("sum_design_risk")),
+              tabPanel("Milestones", tableOutput("sum_design_mstones"))
+            )
           )
+          # box(
+          #   title = tags$b("Summary statistics"),
+          #   width = 6,
+          #   height = 462,
+          #   style = "height:100%; overflow-y: scroll",
+          #   tableOutput("sum_design")
+          # )
         )
       ),
       
@@ -201,7 +216,7 @@ dashboardPage(
           box(
             title = tags$b("Trial design features"),
             div(
-              id = "design_box",
+              # id = "design_box",
               column(
                 width = 3,
                 numericInput(
@@ -408,10 +423,14 @@ dashboardPage(
             title = tags$b("Summary statistics"),
             width = 6,
             height = 400,
-            div(
-              style = "height: 100%; overflow-y: auto",
-              tableOutput("sum_conduct")
+            tabBox(
+              width = 6,
+              tabPanel("Risk overview", tableOutput("sum_design_risk")),
+              tabPanel("Milestones", tableOutput("sum_design_mstones"))
             )
+            # div(
+            #   style = "height: 100%; overflow-y: auto",
+            # )
           )
         )
       ),

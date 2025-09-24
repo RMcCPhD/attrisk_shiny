@@ -2,6 +2,7 @@
 library(shiny)
 library(shinydashboard)
 library(tidyverse)
+library(posterior)
 
 # Define server logic
 function(input, output, session) {
@@ -80,8 +81,8 @@ function(input, output, session) {
   
   # Value thresholds
   value_limits <- list(
-    duration   = c(12, 52),
-    sample     = c(30, 500),
+    duration   = c(12, 260),
+    sample     = c(30, 1000),
     facilities = c(1, 500),
     arms       = c(2, 6),
     mean_age   = c(18, 100),
@@ -138,22 +139,63 @@ function(input, output, session) {
   # Get Gompertz predictions
   design_predict <- predict_design(design_inputs)
   
-  # Render plot
+  # Render plot with or without uncertainty
+  observeEvent(input$uncertainty, {
+    output$plot_hazard_design <- renderPlot({
+      design_predict() %>% 
+        ggplot(aes(x = t * 52, y= `50%`, ymin = `2.5%`, ymax = `97.5%`)) +
+        geom_line() +
+        geom_ribbon(
+          alpha = 0.2, 
+          fill = "steelblue", 
+          colour = "black", 
+          linetype = "dashed"
+        ) +
+        labs(x = "Follow-up time (weeks)", y = "Hazard rate") +
+        scale_x_continuous(n.breaks = 6) +
+        scale_y_continuous(n.breaks = 6) +
+        theme_classic() +
+        theme(
+          axis.text = element_text(size = 15),
+          axis.title = element_text(size = 20, face = "bold")
+        )
+    })
+  })
+  
   output$plot_hazard_design <- renderPlot({
     design_predict() %>% 
-      select(est, t, haz) %>% 
-      pivot_wider(names_from = "est", values_from = "haz") %>% 
-      mutate(val = mean/max(mean)) %>% 
-      ggplot(aes(x = t, y = val)) +
+      ggplot(aes(x = t * 52, y= `50%`, ymin = `2.5%`, ymax = `97.5%`)) +
       geom_line() +
-      scale_x_continuous(n.breaks = 8) +
-      labs(x = "Follow-up time (weeks)", y = "Scaled to highest point (1 = peak)") +
+      labs(x = "Follow-up time (weeks)", y = "Hazard rate") +
+      scale_x_continuous(n.breaks = 6) +
+      scale_y_continuous(n.breaks = 6) +
       theme_classic() +
       theme(
-        axis.text = element_text(size = 15, face = "bold"),
-        axis.title = element_text(size = 15, face = "bold")
+        axis.text = element_text(size = 15),
+        axis.title = element_text(size = 20, face = "bold")
       )
   })
+  
+  # 
+  # output$plot_hazard_design <- renderPlot({
+  #   design_predict() %>% 
+  #     ggplot(aes(x = t * 52, y= `50%`, ymin = `2.5%`, ymax = `97.5%`)) +
+  #     geom_line() +
+  #     geom_ribbon(
+  #       alpha = 0.2, 
+  #       fill = "steelblue", 
+  #       colour = "black", 
+  #       linetype = "dashed"
+  #     ) +
+  #     labs(x = "Follow-up time (weeks)", y = "Hazard rate") +
+  #     scale_x_continuous(n.breaks = 6) +
+  #     scale_y_continuous(n.breaks = 6) +
+  #     theme_classic() +
+  #     theme(
+  #       axis.text = element_text(size = 15),
+  #       axis.title = element_text(size = 20, face = "bold")
+  #     )
+  # })
   
   # Predict conduct ------------------------------------------------------------
   
@@ -164,48 +206,6 @@ function(input, output, session) {
   
   observeEvent(input$reset_conduct, {
     session$sendCustomMessage("resetBox", "conduct_box")
-  })
-  
-  # Prepare user inputs
-  design_inputs <- tidy_inputs(input)
-  
-  # Get Gompertz predictions
-  design_predict <- predict_design(design_inputs)
-  
-  # Render plot
-  output$plot_hazard_conduct <- renderPlot({
-    design_predict() %>% 
-      select(est, t, haz) %>% 
-      pivot_wider(names_from = "est", values_from = "haz") %>% 
-      mutate(val = mean/max(mean)) %>% 
-      ggplot(aes(x = t * 52, y = val)) +
-      geom_line() +
-      scale_x_continuous(n.breaks = 8) +
-      labs(x = "Duration in weeks", y = "Scaled attrition rate") +
-      theme_bw()
-  })
-  
-  # Render summary statistics
-  output$sum_design <- renderTable({
-    design_predict() %>% 
-      filter(est == "mean") %>% 
-      select(est, t, haz, S, H) %>% 
-      pivot_wider(names_from = "est", values_from = "haz") %>% 
-      mutate(t = t) %>% 
-      rename(
-        `Follow-up time (weeks)` = t
-      ) %>% 
-      mutate(
-        `Sample` = input$sample,
-        `Participants at risk of attrition` = round(`Sample` * S),
-        `Number of attrition events` = round(Sample * (lag(S, default = 1) - S)),
-        `Cumulative attrition events` = round(`Sample` * (1 - S))
-      ) %>% 
-      select(-S, -Sample) %>% 
-      select(
-        `Follow-up time (weeks)`, `Participants at risk of attrition`,
-        `Number of attrition events`, `Cumulative attrition events`
-      )
   })
   
   # About ----------------------------------------------------------------------

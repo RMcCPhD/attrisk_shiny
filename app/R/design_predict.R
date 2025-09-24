@@ -6,119 +6,124 @@
 predict_design <- function(design_inputs) {
   reactive({
     
-    input_betas <- design_inputs()
+    # Prepared user inputs
+    input_param <- design_inputs()
     
-    # Estimate rate ------------------------------------------------------------
+    # Posterior draws
+    imp_mdl <- readRDS("www/data/design_draws.rds")
     
-    # Import summarised posterior draws
-    a_imp_pos <- readRDS("www/data/sum_draws_shiny.rds")
+    # Variable names
+    imp_df <- readRDS("www/data/design_df.rds")
+    imp_nms <- colnames(imp_df$X)
     
-    # Compute rate linear predictor
-    rate_lp <- as.matrix(input_betas[,-1])
-    rate_lp_mean <- sum(rate_lp[, "value"] * rate_lp[, "mean_param"])
-    rate_lp_q2.5 <- sum(rate_lp[, "value"] * rate_lp[, "q2.5_param"])
-    rate_lp_q97.5 <- sum(rate_lp[, "value"] * rate_lp[, "q97.5_param"])
+    # Create map of names
+    map_nms <- tibble(
+      param = imp_nms,
+      k = seq_along(imp_nms),
+      beta_id = paste0("beta[", k, "]")
+    )
     
-    # Estimate rate
-    est_rate <- a_imp_pos %>% 
-      filter(param == "mu1") %>% 
-      mutate(
-        log_rate_mean = mean_param + rate_lp_mean[[1]],
-        log_rate_q2.5 = mean_param + rate_lp_q2.5[[1]],
-        log_rate_q97.5 = mean_param + rate_lp_q97.5[[1]],
-        rate_mean = exp(log_rate_mean),
-        rate_q2.5 = exp(log_rate_q2.5),
-        rate_q97.5 = exp(log_rate_q97.5)
-      ) %>% 
-      pivot_longer(-param)
+    # Order user inputs
+    input_order <- map_nms %>% left_join(input_param %>% select(param, value_prep))
+    input_set <- which(!is.na(input_order$value_prep))
+    input_vals <- input_order$value_prep[input_set]
     
-    # Linear predictor for shape -----------------------------------------------
+    # Gompertz parameters ------------------------------------------------------
     
-    # Extract log-rate
-    ext_lograte <- est_rate %>% 
-      filter(grepl("log", name)) %>% 
-      select(-param) %>% 
-      rename(param = name)
+    # Posterior draws matrix
+    draws_mat <- as_draws_matrix(as.array(imp_mdl))
+    draws_input <- draws_mat[, input_order$beta_id[input_set], drop = FALSE]
     
-    # Get user-inputted values
-    ext_inputs <- input_betas %>% select(param, value)
+    # Get rate linear predictor, compute rate for each draw
+    draws_mu1 <- rowMeans(draws_mat[, grepl("^mu1", colnames(draws_mat))])
+    mu1 <- as.numeric(draws_mu1)
+    rate_lp <- as.numeric(draws_input %*% as.numeric(input_vals))
+    log_rate <- mu1 + rate_lp
+    rate <- exp(log_rate)
     
-    # Get shrinkage betas and names
-    imp_shape_betas <- readRDS("www/data/lm_res_shrinkage.rds")
+    # Get shape linear predictor, compute shape for each draw
+    shape_betas <- read_csv("www/data/lm_res.csv") %>% 
+      transmute(term, beta = estimate) %>% 
+      filter(!term == "(Intercept)")
     
-    get_shape_betas <- ext_lograte %>% 
-      filter(param == "log_rate_mean") %>% 
-      mutate(param = "rate") %>% 
-      rbind(ext_inputs) %>% 
-      left_join(
-        read_csv("www/data/lm_res.csv") %>% 
-          select(term) %>% 
-          filter(!term == "(Intercept)") %>% 
-          cbind(tibble(beta = imp_shape_betas$betas)) %>% 
-          rename(param = term)
-      )
+    shape_betas_shr <- readRDS("www/data/lm_res_shrinkage.rds")
+    shape_betas <- shape_betas %>% mutate(beta = shape_betas_shr$betas)
     
-    # Separate rate beta
-    get_shape_rate_beta <- get_shape_betas %>% slice(1)
+    beta_rate <- filter(shape_betas, term == "rate")$beta
     
-    # Get linear predictor for shape
-    shape_lp <- get_shape_betas %>% 
-      slice(-1) %>% 
-      mutate(lp = value * beta) %>% 
-      reframe(lp = sum(lp))
+    shape_lp <- input_order %>% 
+      select(term = param, x = value_prep) %>% 
+      inner_join(filter(shape_betas, term != "rate")) %>% 
+      mutate(x = as.numeric(x)) %>% 
+      filter(!is.na(x)) %>% 
+      summarise(lp = sum(x * beta)) %>% 
+      pull(lp)
     
-    # Get error from random sample, mean of 0 and scale of residSD
-    get_error <- rnorm(1, mean = 0, sd = imp_shape_betas$resid_sd)
+    draws_a_raw <- rowMeans(draws_mat[, grepl("^a", colnames(draws_mat))])
+    set.seed(123)
+    resid <- rowMeans(draws_mat[, grepl("error", colnames(draws_mat))])
+    shape <- log_rate * beta_rate + shape_lp + resid
     
-    # Estimate shape
-    shape_beta <- get_shape_rate_beta$beta
+    # Hazard estimates ---------------------------------------------------------
     
-    est_shape <- ext_lograte %>% 
-      rename(rates = param) %>% 
-      rowwise() %>% 
-      mutate(shapes = value * shape_beta + shape_lp + get_error) %>% 
-      ungroup()
+    # Get time sequence
+    t_max <- as.numeric(filter(input_param, param == "duration")$value_prep)
+    t_years <- seq(0, t_max, length.out = 53)
+    t_weeks <- t_years * 52
     
-    # Prepare Gompertz parameters ----------------------------------------------
+    # Estimate hazard at each time point
+    haz <- vapply(
+      t, 
+      function(t) flexsurv::hgompertz(t, shape, rate), 
+      numeric(length(shape))
+    )
     
-    # Tidy parameters
-    tidy_params <- est_shape %>% 
-      mutate(
-        shapes = unlist(shapes),
-        rates = gsub("log_rate_", "", rates),
-        rates_exp = exp(value)
-      ) %>% 
-      rename(
-        est = rates,
-        log_rates = value,
-        rates = rates_exp
-      ) %>% 
-      select(est, log_rates, rates, shapes)
+    # Summarise (2.5th, 50th, 97.5th)
+    sum_haz <- apply(haz, 2, quantile, c(0.025, 0.5, 0.975)) %>% 
+      t() %>% 
+      as_tibble() %>% 
+      mutate(t = t)
+    # 
+    # # Summary tables -----------------------------------------------------------
+    # 
+    # # Cumulative hazard and risk at horizon
+    # t_end <- tail(t_years, 1)
+    # 
+    # cumhaz_end <- if_else(
+    #   abs(shape) < 1e-6,
+    #   rate * t_end,
+    #   (rate / shape) * (exp(shape * t_end) - 1)
+    # )
+    # 
+    # p_end <- 1 - exp(-cumhaz_end)
+    # risk_sum <- quantile(p_end, c(0.025, 0.50, 0.975), na.rm = TRUE)
+    # 
+    # # Attrition thresholds
+    # p_over <- function(th) mean(p_end > th, na.rm = TRUE)
+    # 
+    # risk_p <- c(
+    #   p5 = prob_over(0.05), 
+    #   p10 = prob_over(0.10), 
+    #   p15 = prob_over(0.15),
+    #   p20 = prob_over(0.20),
+    #   p25 = prob_over(0.25),
+    #   p30 = prob_over(0.30)
+    # )
+    # 
+    # # Expected counts for planned sample
+    # N_input <- input_order %>% filter(param == "n_log") %>% pull(value_prep)
+    # N <- if (length(N_input) && !is.na(N_input)) round(exp(N_input)) else NA
+    # 
+    # count_sum <- if (!is.na(N)) {
+    #   quantile(
+    #     rbinom(length(p_end), N, p_end),
+    #     c(0.025, 0.975), na.rm = TRUE
+    #   )
+    # } else {
+    #   c(NA, NA, NA)
+    # }
+    # 
+    # # Start and end hazard rates
     
-    # Sequence times from user input, get as tibble
-    seq_times <- input_betas %>% filter(param == "duration") %>% select(value)
-    seq_times <- seq_times$value
-    seq_times <- tibble(t = seq(0, seq_times * 52))
-    
-    # Estimate hazard, cumulative risk and cumulative incidence
-    est_gomp <- seq_times %>%
-      left_join(tidy_params %>% crossing(seq_times)) %>% 
-      arrange(t) %>% 
-      mutate(
-        haz = pmap_dbl(
-          list(t = t, rate = rates, shape = shapes),
-          function(t, rate, shape) {
-            flexsurv::hgompertz(t, shape, rate)
-          }
-        ),
-        H = pmap_dbl(
-          list(t = t, rate = rates, shape = shapes),
-          function(t, rate, shape) {
-            flexsurv::Hgompertz(t, shape, rate)
-          }
-        ),
-        S = exp(-H),
-        cuminc = 1 - S
-      )
   })
 }

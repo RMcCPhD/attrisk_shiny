@@ -1,5 +1,7 @@
 
 # Test environment for server features
+rm(list = ls())
+gc()
 library(tidyverse)
 
 # Create user input data -------------------------------------------------------
@@ -15,6 +17,8 @@ inputs <- list(
   age_upper    = "70yr",
   min_bmi      = "None",
   max_bmi      = "None",
+  min_egfr     = "None",
+  max_egfr     = "None",
   who_reg      = c("Regions of the Americas", "European region"),
   one_pom      = 2L,
   trttype      = c("Placebo", "Active comparator"),
@@ -48,8 +52,9 @@ input_tidy <- input_tbl %>%
       name == "n_arms" & value == "4" & !is.na(value)  ~ "3",
       name == "n_arms" & value > "4" & !is.na(value)  ~ "4",
       # Treatment type as binary value
-      name == "trttype" & grepl("Active", value) & !is.na(value)  ~ "1",
-      name == "trttype" & !grepl("Active", value) & !is.na(value)  ~ "0",
+      name == "trttype" & value == "Placebo"  ~ "0",
+      name == "trttype" & value == "Active comparator" ~ "1",
+      name == "trttype" & grepl("Placebo", value) & grepl("Active", value)  ~ "2",
       # Age limits as binary value
       name == "age_lower" & grepl(">", value) & !is.na(value)  ~ "1",
       name == "age_lower" & !grepl(">", value) & !is.na(value)  ~ "0",
@@ -58,6 +63,9 @@ input_tidy <- input_tbl %>%
       # BMI limits as binary value
       (name == "min_bmi" | name == "max_bmi") & value != "None" & !is.na(value)  ~ "1",
       (name == "min_bmi" | name == "max_bmi") & value == "None" & !is.na(value)  ~ "0",
+      # eGFR limits as binary value
+      (name == "min_egfr" | name == "max_egfr") & value != "None" & !is.na(value)  ~ "1",
+      (name == "min_egfr" | name == "max_egfr") & value == "None" & !is.na(value)  ~ "0",
       # Phase as binary values
       name == "phase" & value == "3" ~ "0",
       name == "phase" & value == "4" ~ "1",
@@ -100,15 +108,192 @@ input_param <- input_tidy %>%
 input_betas <- input_param %>% 
   select(param, value = value_prep) %>% 
   left_join(
-    readRDS("AttRisk/www/data/sum_draws_shiny.rds") %>% 
+    readRDS("app/www/data/sum_draws_shiny.rds") %>% 
       filter(!param %in% c("a", "mu1"))
   ) %>% 
-  mutate(value = as.numeric(value))
+  mutate(value = as.numeric(value)) %>% 
+  arrange(param)
+
+# Get full set of betas
+var_names <- c(
+  "trttype", "duration", "age_lower", "age_upper", "min_bmi", "max_bmi", 
+  "min_egfr", "max_egfr", "n_log", "phase", "blindingdouble", 
+  "blindingquadruple", "blindingtriple", "reg_am", "reg_eur", "reg_wpac", 
+  "reg_afr", "reg_sea", "reg_em", "n_arms", "n_facilities", "one_pom"
+)
+
+var_order <- tibble(selected = var_names) %>% 
+  mutate(param = selected) %>% 
+  left_join(input_param) %>% 
+  mutate(id = row_number())
+
+# Estimate rate and shape for mvr samples --------------------------------------
+
+# Import mvr samples
+a_imp_mvr <- readRDS("app/www/data/mvr_draws_post_testing.rds")
+a_imp_beta <- readRDS("app/www/data/mvr_draws_beta.rds")
+
+# Nest gompertz samples
+mvr_gomp <- a_imp_mvr %>% 
+  group_by(sample) %>% 
+  nest(.key = "gomp")
+
+# Get betas, nest
+mvr_betas <- var_order %>% 
+  filter(!is.na(name)) %>% 
+  select(param, id) %>% 
+  inner_join(a_imp_beta %>% rename(id = cov) %>% mutate(id = as.integer(id))) %>% 
+  arrange(param) %>% 
+  group_by(sample) %>% 
+  nest()
+
+# Join together
+# Calculate rate lp, log-rate and rate
+mvr_nest <- mvr_gomp %>% 
+  left_join(mvr_betas) %>% 
+  mutate(
+    rate_params = map2(gomp, data, function(g, df) {
+      mu1 <- g %>% filter(param == "mu1")
+      tibble(
+        trial = mu1$trial,
+        lp = sum(df$value * input_betas$value),
+        log_rate = mu1$value + lp,
+        rate = exp(log_rate)
+      )
+    })
+  )
+
+# Get shrinkage betas and names for shape
+imp_shape_betas <- readRDS("app/www/data/lm_res_shrinkage.rds")
+imp_shape_nms <- read_csv("app/www/data/lm_res.csv") %>% 
+  filter(!term == "(Intercept)") %>% 
+  select(term) %>% 
+  cbind(betas = imp_shape_betas$betas)
+
+# Separate rate beta
+shape_rate_beta <- imp_shape_nms %>% slice(1)
+
+# Calculate shape
+mvr_shape <- mvr_nest %>% 
+  mutate(
+    shape_params = pmap(list(gomp, data, rate_params), function(g, df, rate) {
+      vars <- g %>% filter(param == "a")
+      
+      shape_vars <- df %>% 
+        select(term = param, value) %>% 
+        inner_join(imp_shape_nms, by = "term")
+      
+      tibble(
+        trial = vars$trial,
+        error = rnorm(344, mean = 0, sd = imp_shape_betas$resid_sd),
+        a_raw = vars$value,
+        log_rate = rate$log_rate,
+        lp = sum(shape_vars$value * shape_vars$betas),
+        shape = log_rate * imp_shape_nms$betas[1] + lp + error
+      )
+    })
+  )
+
+# Build dataset for hazard estimation
+# Remove any extreme samples (>5, 464 samples for 1 trial)
+df_haz <- mvr_shape %>% 
+  mutate(
+    sample_res = map2(rate_params, shape_params, function(rate, shape) {
+      tibble(
+        trial = rate$trial,
+        rate = rate$rate,
+        shape = shape$shape
+      )
+    })
+  ) %>% 
+  select(sample, sample_res) %>% 
+  unnest(sample_res) %>% 
+  filter(rate < 5)
+
+# Get mean across trials
+# Estimate hazard function for each sample mean
+df_haz_mean <- df_haz %>% 
+  group_by(sample) %>% 
+  reframe(
+    mean_rate = mean(rate),
+    mean_shape = mean(shape)
+  ) %>% 
+  group_by(sample) %>% 
+  nest() %>% 
+  mutate(
+    haz_df = map(data, ~ {
+      tibble(
+        t = seq(0, 0.5, by = 0.1),
+        rate = rep(.x$mean_rate, 6),
+        shape = rep(.x$mean_shape, 6),
+        haz = flexsurv::hgompertz(t, shape, rate)
+      )
+    })
+  )
+
+# Bind rows and test plot
+df_haz_mean %>% 
+  select(sample, haz_df) %>% 
+  unnest(haz_df) %>% 
+  group_by(t) %>% 
+  reframe(
+    haz_lo = quantile(haz, 0.025),
+    haz_med = median(haz),
+    haz_hi = quantile(haz, 0.975)
+  ) %>% 
+  ggplot(aes(x = t * 52, y = haz_med, ymin = haz_lo, ymax = haz_hi)) +
+  geom_line() +
+  geom_ribbon(alpha = 0.3) +
+  theme_classic()
+
+
+
+
+
+
+# Build tibble of mean parameters
+# Repeat using posterior mean of parameters
+# Forms centre of estimate, mvr samples illustrate uncertainty
+a_imp_pos <- readRDS("app/www/data/sum_draws_shiny.rds")
+rate_lp <- as.matrix(input_betas[,-1])
+rate_lp_mean <- sum(rate_lp[, "value"] * rate_lp[, "mean_param"])
+
+rate_est <- a_imp_pos %>% 
+  filter(param == "mu1") %>% 
+  mutate(
+    log_rate_mean = mean_param + rate_lp_mean[[1]],
+    rate_mean = exp(log_rate_mean),
+  ) %>% 
+  select(log_rate_mean, rate_mean)
+
+lograte_shape <- rate_est$log_rate_mean * imp_shape_nms$betas[1]
+shape_vars <- input_betas %>% rename(term = param) %>% inner_join(imp_shape_nms)
+set.seed(123)
+shape_resid <- rnorm(1, mean = 0, sd = imp_shape_betas$resid_sd)
+shape_est <- lograte_shape + sum(shape_vars$value * shape_vars$betas + shape_resid)
+
+  df_haz_pos_mean <- tibble(
+  mean_rate = rate_est$rate_mean,
+  mean_shape = shape_est
+)
+
+# Below is the original testing using the posterior mean and quantiles
+# New version samples 1000 draws from a multivariate normal distribution and
+# compute rate and shape for each trial sample (1000 per 344 trials)
+
+#
+#
+#
+#
+#
+#
+#
+#
 
 # Estimate rate ----------------------------------------------------------------
 
 # Import summarised posterior draws
-a_imp_pos <- readRDS("AttRisk/www/data/sum_draws_shiny.rds")
+a_imp_pos <- readRDS("app/www/data/sum_draws_shiny.rds")
 
 # Compute rate linear predictor
 rate_lp <- as.matrix(input_betas[,-1])

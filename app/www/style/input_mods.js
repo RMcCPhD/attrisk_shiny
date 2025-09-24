@@ -2,8 +2,8 @@
 // Config
 const UI_HELPERS_CONFIG = {
   placeholders: {
-    duration:    '12 - 26',
-    sample:      '30 - 500',
+    duration:    '12 - 52',
+    sample:      '30 - 1000',
     facilities:  '1 - 500',
     arms:        '2 - 6',
     mean_age:    '18 - 100',

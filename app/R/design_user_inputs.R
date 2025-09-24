@@ -54,9 +54,10 @@ tidy_inputs <- function(input) {
           name == "n_arms" & value == "3" & !is.na(value)  ~ "2",
           name == "n_arms" & value == "4" & !is.na(value)  ~ "3",
           name == "n_arms" & !value %in% c("2", "3", "4") ~ "4",
-          # Treatment type as binary value
-          name == "trttype" & grepl("Active", value) & !is.na(value)  ~ "1",
-          name == "trttype" & !grepl("Active", value) & !is.na(value)  ~ "0",
+          # Treatment type as ordinal
+          name == "trttype" & value == "Placebo"  ~ "0",
+          name == "trttype" & value == "Active comparator" ~ "1",
+          name == "trttype" & grepl("Placebo", value) & grepl("Active", value)  ~ "2",
           # Age limits as binary value
           name == "age_lower" & grepl(">", value) & !is.na(value)  ~ "1",
           name == "age_lower" & !grepl(">", value) & !is.na(value)  ~ "0",
@@ -105,14 +106,5 @@ tidy_inputs <- function(input) {
         )
       ) %>%
       filter(!is.na(value_prep))
-    
-    # Join betas
-    input_betas <- input_param %>%
-      select(param, value = value_prep) %>%
-      left_join(
-        readRDS("www/data/sum_draws_shiny.rds") %>%
-          filter(!param %in% c("a", "mu1"))
-      ) %>% 
-      mutate(value = as.numeric(value))
   })
 }

@@ -60,7 +60,6 @@ predict_design <- function(design_inputs) {
       pull(lp)
     
     draws_a_raw <- rowMeans(draws_mat[, grepl("^a", colnames(draws_mat))])
-    set.seed(123)
     resid <- rowMeans(draws_mat[, grepl("error", colnames(draws_mat))])
     shape <- log_rate * beta_rate + shape_lp + resid
     
@@ -73,7 +72,7 @@ predict_design <- function(design_inputs) {
     
     # Estimate hazard at each time point
     haz <- vapply(
-      t, 
+      t_years, 
       function(t) flexsurv::hgompertz(t, shape, rate), 
       numeric(length(shape))
     )
@@ -82,7 +81,7 @@ predict_design <- function(design_inputs) {
     sum_haz <- apply(haz, 2, quantile, c(0.025, 0.5, 0.975)) %>% 
       t() %>% 
       as_tibble() %>% 
-      mutate(t = t)
+      mutate(t = t_weeks)
     # 
     # # Summary tables -----------------------------------------------------------
     # 

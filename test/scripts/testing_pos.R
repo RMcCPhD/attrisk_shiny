@@ -26,34 +26,33 @@ map_nms <- tibble(
 # Multiple choice are comma-collapsed in server (e.g. WHO regions)
 inputs <- list(
   duration     = 52,
-  n_log        = log(250),
-  n_facilities = log(300),
-  n_arms       = 4,
+  n_log        = 500,
+  n_facilities = 100,
+  n_arms       = 2,
   age_lower    = "18yr",
   age_upper    = "70yr",
   min_bmi      = "None",
   max_bmi      = "None",
-  min_egfr     = "None",
-  max_egfr     = "None",
+  min_egfr     = "<=30 ml/min/1.73m2",
+  max_egfr     = ">60 ml/min/1.73m2",
   who_reg      = c("Regions of the Americas", "European region"),
-  one_pom      = 1,
-  trttype      = 0L,
-  phase        = 3L,
+  one_pom      = "1",
+  trttype      = c("Placebo", "Active comparator"),
+  phase        = "3",
   blinding     = "Double"
 )
 
 # Create tibble
 input_tbl <- as_tibble(bind_rows(inputs)) %>%
   mutate(
-    duration = if_else(is.na(duration), 26, duration),
+    duration = if_else(is.na(duration), 12, duration),
     across(c(who_reg, trttype), ~ if_else(. == "", NA, .)),
     across(c(who_reg, trttype), ~ paste0(unique(.), collapse = ", ")),
     across(everything(), as.character)
   ) %>%
   pivot_longer(everything()) %>%
   filter(value != "NA") %>% 
-  distinct() %>%
-  arrange()
+  distinct()
 
 # Tidy values for user inputs to match beta names
 # Conditions ignored if input is NA

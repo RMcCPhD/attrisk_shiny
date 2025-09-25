@@ -6,6 +6,7 @@
 # Build tibble of user inputs upon predict design being activated
 tidy_inputs <- function(input) {
   eventReactive(input$predict_design, {
+    
     # Get list of inputs
     inputs <- list(
       duration     = input$duration,

@@ -50,9 +50,9 @@ dashboardPage(
       
       tabItem(
         tabName = "predict_design",
-        # h3(tags$b("Trial design: Predict attrition risk")),
         fluidRow(
           box(
+            height = 462,
             title = tags$b("Trial design features"),
             div(
               id = "design_box",
@@ -81,14 +81,14 @@ dashboardPage(
                 actionButton(
                   "reset_design", "Reset design features", 
                   class = "btn-warning",
-                  width = "170px",
+                  width = "165px",
                   style = "font-weight: bold; color:white; font-size:125%%"
                 ),
                 div(style = "height: 15px;"),
                 actionButton(
                   "predict_design", "Predict risk", 
                   class = "btn-success",
-                  width = "170px",
+                  width = "165px",
                   style = "font-weight: bold; color:white; font-size:125%%"
                 )
               ),
@@ -103,7 +103,7 @@ dashboardPage(
                 ),
                 radioButtons(
                   "bmi_lower", "Lower bmi limits",
-                  c("None", ">=20 kg/m2"),
+                  c("None", "<=25 kg/m2"),
                   inline = TRUE,
                   selected = character(0)
                 ),
@@ -176,16 +176,22 @@ dashboardPage(
               )
             )
           ),
-        ),
-        fluidRow(
-          id = "design-row",
-          width = 12,
           box(
             title = tags$b("Attrition risk over time"),
             width = 6,
             height = 462,
-            plotOutput("plot_hazard_design", height = "100%")
-          ),
+            plotOutput("plot_hazard_design")
+          )
+        ),
+        fluidRow(
+          # id = "design-row",
+          # width = 12,
+          # box(
+          #   title = tags$b("Attrition risk over time"),
+          #   width = 6,
+          #   height = 462,
+          #   plotOutput("plot_hazard_design", height = "100%")
+          # ),
           box(
             title = tags$b("Summary statistics"),
             width = 6,

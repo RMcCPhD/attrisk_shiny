@@ -139,33 +139,17 @@ function(input, output, session) {
   # Get Gompertz predictions
   design_predict <- predict_design(design_inputs)
   
-  # Render plot with or without uncertainty
-  observeEvent(input$uncertainty, {
-    output$plot_hazard_design <- renderPlot({
-      design_predict() %>% 
-        ggplot(aes(x = t * 52, y= `50%`, ymin = `2.5%`, ymax = `97.5%`)) +
-        geom_line() +
-        geom_ribbon(
-          alpha = 0.2, 
-          fill = "steelblue", 
-          colour = "black", 
-          linetype = "dashed"
-        ) +
-        labs(x = "Follow-up time (weeks)", y = "Hazard rate") +
-        scale_x_continuous(n.breaks = 6) +
-        scale_y_continuous(n.breaks = 6) +
-        theme_classic() +
-        theme(
-          axis.text = element_text(size = 15),
-          axis.title = element_text(size = 20, face = "bold")
-        )
-    })
-  })
-  
+  # Render plot
   output$plot_hazard_design <- renderPlot({
-    design_predict() %>% 
-      ggplot(aes(x = t * 52, y= `50%`, ymin = `2.5%`, ymax = `97.5%`)) +
+    design_predict() %>%
+      ggplot(aes(x = t, y= `50%`, ymin = `2.5%`, ymax = `97.5%`)) +
       geom_line() +
+      geom_ribbon(
+        alpha = 0.2,
+        fill = "steelblue",
+        colour = "black",
+        linetype = "dashed"
+      ) +
       labs(x = "Follow-up time (weeks)", y = "Hazard rate") +
       scale_x_continuous(n.breaks = 6) +
       scale_y_continuous(n.breaks = 6) +
@@ -175,27 +159,6 @@ function(input, output, session) {
         axis.title = element_text(size = 20, face = "bold")
       )
   })
-  
-  # 
-  # output$plot_hazard_design <- renderPlot({
-  #   design_predict() %>% 
-  #     ggplot(aes(x = t * 52, y= `50%`, ymin = `2.5%`, ymax = `97.5%`)) +
-  #     geom_line() +
-  #     geom_ribbon(
-  #       alpha = 0.2, 
-  #       fill = "steelblue", 
-  #       colour = "black", 
-  #       linetype = "dashed"
-  #     ) +
-  #     labs(x = "Follow-up time (weeks)", y = "Hazard rate") +
-  #     scale_x_continuous(n.breaks = 6) +
-  #     scale_y_continuous(n.breaks = 6) +
-  #     theme_classic() +
-  #     theme(
-  #       axis.text = element_text(size = 15),
-  #       axis.title = element_text(size = 20, face = "bold")
-  #     )
-  # })
   
   # Predict conduct ------------------------------------------------------------
   

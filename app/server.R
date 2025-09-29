@@ -3,6 +3,7 @@ library(shiny)
 library(shinydashboard)
 library(tidyverse)
 library(posterior)
+library(DT)
 
 # Define server logic
 function(input, output, session) {
@@ -139,10 +140,10 @@ function(input, output, session) {
   # Get Gompertz predictions
   design_predict <- predict_design(design_inputs)
   
-  # Render plot
-  output$plot_hazard_design <- renderPlot({
+  # Render plots
+  output$plot_cind_design <- renderPlot({
     design_predict() %>%
-      ggplot(aes(x = t, y= `50%`, ymin = `2.5%`, ymax = `97.5%`)) +
+      ggplot(aes(x = t_wks, y = risk_q50, ymin = risk_q025, ymax = risk_q975)) +
       geom_line() +
       geom_ribbon(
         alpha = 0.2,
@@ -150,7 +151,7 @@ function(input, output, session) {
         colour = "black",
         linetype = "dashed"
       ) +
-      labs(x = "Follow-up time (weeks)", y = "Hazard rate") +
+      labs(x = "Follow-up time (weeks)", y = "Attrition risk") +
       scale_x_continuous(n.breaks = 6) +
       scale_y_continuous(n.breaks = 6) +
       theme_classic() +
@@ -158,6 +159,76 @@ function(input, output, session) {
         axis.text = element_text(size = 15),
         axis.title = element_text(size = 20, face = "bold")
       )
+  })
+  
+  output$plot_hazard_design <- renderPlot({
+    design_predict() %>%
+      ggplot(aes(x = t_wks, y = hazard_q50, ymin = hazard_q025, ymax = hazard_q975)) +
+      geom_line() +
+      labs(x = "Follow-up time (weeks)", y = "Instantaneous hazard") +
+      scale_x_continuous(n.breaks = 6) +
+      scale_y_continuous(n.breaks = 6) +
+      theme_classic() +
+      theme(
+        axis.text = element_text(size = 15),
+        axis.title = element_text(size = 20, face = "bold")
+      )
+  })
+  
+  # Render summary table (nothing renders using renderDT, only renderTable)
+  output$sum_design <- renderTable(
+    design_predict() %>%
+      select(t_wks, drp_q50, contains(c("surv", "risk", "cdrop"))) %>%
+      mutate(
+        drp_q50 = round(drp_q50),
+        across(contains(c("surv", "risk", "cdrop")), ~ round(., 2)),
+        across(c(t_wks, drp_q50), as.integer),
+        t2e = paste0(surv_q50, " [", surv_q025, ", ", surv_q975, "]"),
+        risk = paste0(risk_q50, " [", risk_q025, ", ", risk_q975, "]")
+      ) %>% 
+      select(t_wks, at_risk_q50, drp_q50, risk, t2e) %>% 
+      rename(
+        "Follow-up time (weeks)" = t_wks,
+        "Participants at risk (median)" = at_risk_q50,
+        "Non-completers (median)" = drp_q50,
+        "Time-to-attrition (median [quantiles])" = t2e,
+        "Attrition risk (median [quantiles])" = risk,
+      )
+  )
+  
+  output$sum_design <- DT::renderDT({
+    df <- design_predict() %>%
+      select(t_wks, drp_q50, contains(c("surv", "risk", "cdrop"))) %>%
+      mutate(
+        across(c(drp_q50, starts_with("at_risk")), ~ round(.)),
+        across(c(contains(c("surv", "cdrop")), risk_q025:risk_q975), ~ round(., 2)),
+        across(c(t_wks, drp_q50), as.integer),
+        t2e = paste0(surv_q50, " [", surv_q025, ", ", surv_q975, "]"),
+        risk = paste0(risk_q50, " [", risk_q025, ", ", risk_q975, "]")
+      ) %>% 
+      select(t_wks, at_risk_q50, drp_q50, risk, t2e) %>% 
+      rename(
+        "Follow-up time (weeks)" = t_wks,
+        "Participants at risk (median)" = at_risk_q50,
+        "Non-completers (median)" = drp_q50,
+        "Time-to-attrition (median [quantiles])" = t2e,
+        "Attrition risk (median [quantiles])" = risk,
+      )
+    
+    DT::datatable(
+      df,
+      rownames = FALSE,
+      class = "compact stripe hover",
+      options = list(
+        scrollY = 320,
+        scrollX = TRUE,
+        scrollCollapse = TRUE,
+        paging = FALSE,
+        autoWidth = TRUE,
+        order = list(),
+        searching = FALSE
+      )
+    )
   })
   
   # Predict conduct ------------------------------------------------------------

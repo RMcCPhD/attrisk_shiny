@@ -51,25 +51,29 @@ tidy_inputs <- function(input) {
           name == "n_log" ~ as.character(as.numeric(value)),
           name == "n_facilities" ~ as.character(as.numeric(value)),
           # Number of arms converted to ordinal variable
-          name == "n_arms" & value == "2" & !is.na(value) ~ "1",
-          name == "n_arms" & value == "3" & !is.na(value)  ~ "2",
-          name == "n_arms" & value == "4" & !is.na(value)  ~ "3",
-          name == "n_arms" & !value %in% c("2", "3", "4") ~ "4",
+          name == "n_arms" & value == "2" ~ "1",
+          name == "n_arms" & value == "3" ~ "2",
+          name == "n_arms" & value == "4" ~ "3",
+          name == "n_arms" & !value %in% c("2", "3", "4") & !is.na(value) ~ "4",
           # Treatment type as ordinal
           name == "trttype" & value == "Placebo"  ~ "0",
           name == "trttype" & value == "Active comparator" ~ "1",
           name == "trttype" & grepl("Placebo", value) & grepl("Active", value)  ~ "2",
           # Age limits as binary value
-          name == "age_lower" & grepl(">", value) & !is.na(value)  ~ "1",
-          name == "age_lower" & !grepl(">", value) & !is.na(value)  ~ "0",
-          name == "age_upper" & grepl(">", value) & !is.na(value)  ~ "1",
-          name == "age_upper" & !grepl(">", value) & !is.na(value)  ~ "0",
+          name == "age_lower" & grepl("18yr", value) ~ "0",
+          name == "age_lower" & !grepl(">18yr", value)  ~ "1",
+          name == "age_upper" & grepl("70yr", value) ~ "0",
+          name == "age_upper" & !grepl(">70yr", value) ~ "1",
           # BMI limits as binary value
-          (name == "min_bmi" | name == "max_bmi") & value != "None" & !is.na(value)  ~ "1",
-          (name == "min_bmi" | name == "max_bmi") & value == "None" & !is.na(value)  ~ "0",
+          (name == "min_bmi" | name == "max_bmi") & value != "None"  ~ "1",
+          (name == "min_bmi" | name == "max_bmi") & value == "None" ~ "0",
           # eGFR limits as binary variable
-          (name == "min_egfr" | name == "max_egfr") & value != "None" & !is.na(value)  ~ "1",
-          (name == "min_egfr" | name == "max_egfr") & value == "None" & !is.na(value)  ~ "0",
+          name == "min_egfr" & value == "None" ~ "0",
+          name == "min_egfr" & value == "<=30 ml/min/1.73m2" ~ "1",
+          name == "min_egfr" & value == ">30 ml/min/1.73m2"  ~ "2",
+          name == "max_egfr" & value == "None" ~ "0",
+          name == "max_egfr" & value == "<=60 ml/min/1.73m2" ~ "1",
+          name == "max_egfr" & value == ">60 ml/min/1.73m2"  ~ "2",
           # Phase as binary values
           name == "phase" & value == "3" ~ "0",
           name == "phase" & value == "4" ~ "1",
@@ -77,8 +81,8 @@ tidy_inputs <- function(input) {
           name == "one_pom" & value != "1" & !is.na(value)  ~ "1",
           name == "one_pom" & value == "1" & !is.na(value)  ~ "0",
           # Blinding as level name in beta dataset
-          name == "blinding" & value == "Open label"  ~ NA,
-          name == "blinding" & !is.na(value) ~ "1",
+          name == "blinding" & value == "Open label"  ~ "0",
+          name == "blinding" & !is.na(value) & value != "Open label" ~ "1",
           # WHO regions as binary values
           name == "who_reg" & !is.na(value) ~ "1",
           TRUE ~ value
@@ -93,7 +97,7 @@ tidy_inputs <- function(input) {
         param = case_when(
           !name %in% c("who_reg", "blinding") ~ name,
           # Blinding
-          name == "blinding" & value == "Open label" ~ NA,
+          name == "blinding" & value == "Open label" ~ "blindingopenlabel",
           name == "blinding" & value == "Double" ~ "blindingdouble",
           name == "blinding" & value == "Triple" ~ "blindingtriple",
           name == "blinding" & value == "Quadruple" ~ "blindingquadruple",

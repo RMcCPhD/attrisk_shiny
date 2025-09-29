@@ -24,12 +24,7 @@ dashboardPage(
     
     # Javascript placeholders (greyed-out text in input boxes)
     tags$head(tags$script(src = "style/input_mods.js")),
-    
-    # Add inner scroll box for summary statistics
-    tags$head(tags$style(HTML("
-      #design-row .box { display: flex; flex-direction: column; }
-      #design-row .box .box-body { flex: 1 1 auto; overflow: auto; }"))),
-    
+
     tabItems(
 
       # Home -------------------------------------------------------------------
@@ -81,14 +76,14 @@ dashboardPage(
                 actionButton(
                   "reset_design", "Reset design features", 
                   class = "btn-warning",
-                  width = "165px",
+                  width = "150px",
                   style = "font-weight: bold; color:white; font-size:125%%"
                 ),
                 div(style = "height: 15px;"),
                 actionButton(
                   "predict_design", "Predict risk", 
                   class = "btn-success",
-                  width = "165px",
+                  width = "150px",
                   style = "font-weight: bold; color:white; font-size:125%%"
                 )
               ),
@@ -119,10 +114,9 @@ dashboardPage(
                   inline = TRUE,
                   selected = character(0)
                 ),
-                div(style = "height: 5px;"),
-                checkboxInput(
-                  "uncertainty", "Show uncertainty on plots",
-                  NULL
+                checkboxGroupInput(
+                  "trttype", "Comparators",
+                  c("Placebo", "Active comparator")
                 )
               ),
               
@@ -151,10 +145,6 @@ dashboardPage(
                   c("1", ">1"),
                   inline = TRUE,
                   selected = character(0)
-                ),
-                checkboxGroupInput(
-                  "trttype", "Comparators",
-                  c("Placebo", "Active comparator")
                 )
               ),
               
@@ -180,36 +170,27 @@ dashboardPage(
             title = tags$b("Attrition risk over time"),
             width = 6,
             height = 462,
-            plotOutput("plot_hazard_design")
+            plotOutput("plot_cind_design")
           )
         ),
         fluidRow(
-          # id = "design-row",
-          # width = 12,
-          # box(
-          #   title = tags$b("Attrition risk over time"),
-          #   width = 6,
-          #   height = 462,
-          #   plotOutput("plot_hazard_design", height = "100%")
-          # ),
+          width = 12,
           box(
             title = tags$b("Summary statistics"),
             width = 6,
             height = 462,
-            style = "height: 100%; overflow-y: auto",
-            tabBox(
-              width = 6,
-              tabPanel("Risk overview", tableOutput("sum_design_risk")),
-              tabPanel("Milestones", tableOutput("sum_design_mstones"))
+            div(style = "height: 380px;",  # inner container height (box title eats ~80px)
+                DT::DTOutput("sum_design")
             )
+            # style = "height:100%; overflow-y: auto",
+            # tableOutput("sum_design")
+          ),
+          box(
+            title = tags$b("Instantaneous attrition hazard (at each timepoint)"),
+            width = 6,
+            height = 462,
+            plotOutput("plot_hazard_design")
           )
-          # box(
-          #   title = tags$b("Summary statistics"),
-          #   width = 6,
-          #   height = 462,
-          #   style = "height:100%; overflow-y: scroll",
-          #   tableOutput("sum_design")
-          # )
         )
       ),
       

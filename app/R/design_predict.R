@@ -3,126 +3,169 @@
 # Estimates hazard, cumulative hazard and cumulative incidence using
 # Gompertz parameters and scale of user-inputted time
 
+# Gather materials -------------------------------------------------------------
+
+# Import posterior draws and trial-level dataset
+imp_mdl <- readRDS("www/data/design_draws.rds") # Posterior draws
+imp_df <- readRDS("www/data/design_df.rds")     # Trial dataset (for var names)
+
+# Shape coefficients
+shape_betas_df <- readr::read_csv("www/data/lm_res.csv") %>% 
+  dplyr::transmute(term, beta = estimate) %>%
+  dplyr::filter(term != "(Intercept)")
+
+shape_betas_shr <- readRDS("www/data/lm_res_shrinkage.rds") # LASSO betas
+shape_betas_df$beta <- shape_betas_shr$betas
+
+# Separate rate beta for shape
+beta_rate <- filter(shape_betas_df, term == "rate")$beta
+shape_cov_betas <- dplyr::filter(shape_betas_df, term != "rate")
+
+# Get residual SD for shape
+resid_sd <- shape_betas_shr$resid_sd
+
+# Create name map
+imp_nms <- colnames(imp_df$X)
+map_nms <- tibble(
+  param = imp_nms,
+  k = seq_along(imp_nms),
+  beta_id = paste0("beta[", k, "]")
+)
+
+# Get draws matrix
+draws_mat <- as_draws_matrix(as.array(imp_mdl))
+colnms <- colnames(draws_mat)
+
+# Helper: Get draws matrix columns safely
+get_mat_cols <- function(rx) {
+  cols <- grep(rx, coln, value = TRUE)
+  if (length(cols) == 0) stop("No columns matched: ", rx)
+  draws_mat[, cols, drop = FALSE]
+}
+
+# Pull core parameters
+beta_cols   <- grep("^beta\\[", colnms, value = TRUE)
+mu_mu1_col  <- grep("^mu_mu1$", colnms, value = TRUE)
+tau_mu1_col <- grep("^tau_mu1$", colnms, value = TRUE)
+
+beta_draws   <- draws_mat[, beta_cols, drop = FALSE] # [S x K]
+mu_mu1_draws  <- as.numeric(draws_mat[, mu_mu1_col])  # [S]
+tau_mu1_draws <- as.numeric(draws_mat[, tau_mu1_col]) # [S]
+
+# Reactive: Build risk estimates, dependent on user inputs ---------------------
+
 predict_design <- function(design_inputs) {
   reactive({
     
-    # Prepared user inputs
+    # Get prepared user inputs
     input_param <- design_inputs()
+    print(input_param)
     
-    # Posterior draws
-    imp_mdl <- readRDS("www/data/design_draws.rds")
+    # Match inputs to betas
+    input_order <- map_nms %>% 
+      left_join(input_param %>% select(param, value_prep))
     
-    # Variable names
-    imp_df <- readRDS("www/data/design_df.rds")
-    imp_nms <- colnames(imp_df$X)
+    # Safely get variables
+    idx <- which(!is.na(input_order$value_prep))
+    if (length(idx) == 0) {
+      shiny::validate(shiny::need(FALSE, "No valid inputs supplied."))
+    }
     
-    # Create map of names
-    map_nms <- tibble(
-      param = imp_nms,
-      k = seq_along(imp_nms),
-      beta_id = paste0("beta[", k, "]")
-    )
+    x_vec <- as.numeric(input_order$value_prep[idx]) # [K]
+    beta_sel <- beta_draws[, input_order$beta_id[idx], drop = FALSE] # [S x K]
     
-    # Order user inputs
-    input_order <- map_nms %>% left_join(input_param %>% select(param, value_prep))
-    input_set <- which(!is.na(input_order$value_prep))
-    input_vals <- input_order$value_prep[input_set]
+    # Random effects for new arm
+    S <- nrow(beta_sel)
+    z_new <- 0 # Test: Removing random effects (option to add these tbc)
+    err_new <- 0
+    # z_new <- rnorm(S)
+    # err_new <- rnorm(S, 0, resid_sd)
     
-    # Gompertz parameters ------------------------------------------------------
+    # Build log-rate and rate per draw
+    mu1_new <- mu_mu1_draws + tau_mu1_draws * z_new # Baseline log-rate
+    rate_lp <- as.numeric(beta_sel %*% x_vec)       # Rate lp
+    log_rate <- mu1_new + rate_lp                   # Log-rate
+    rate <- exp(log_rate)                           # Rate
     
-    # Posterior draws matrix
-    draws_mat <- as_draws_matrix(as.array(imp_mdl))
-    draws_input <- draws_mat[, input_order$beta_id[input_set], drop = FALSE]
-    
-    # Get rate linear predictor, compute rate for each draw
-    draws_mu1 <- rowMeans(draws_mat[, grepl("^mu1", colnames(draws_mat))])
-    mu1 <- as.numeric(draws_mu1)
-    rate_lp <- as.numeric(draws_input %*% as.numeric(input_vals))
-    log_rate <- mu1 + rate_lp
-    rate <- exp(log_rate)
-    
-    # Get shape linear predictor, compute shape for each draw
-    shape_betas <- read_csv("www/data/lm_res.csv") %>% 
-      transmute(term, beta = estimate) %>% 
-      filter(!term == "(Intercept)")
-    
-    shape_betas_shr <- readRDS("www/data/lm_res_shrinkage.rds")
-    shape_betas <- shape_betas %>% mutate(beta = shape_betas_shr$betas)
-    
-    beta_rate <- filter(shape_betas, term == "rate")$beta
-    
-    shape_lp <- input_order %>% 
+    # Build shape
+    x_shape <- input_order %>% 
       select(term = param, x = value_prep) %>% 
-      inner_join(filter(shape_betas, term != "rate")) %>% 
+      inner_join(shape_cov_betas) %>% 
       mutate(x = as.numeric(x)) %>% 
-      filter(!is.na(x)) %>% 
-      summarise(lp = sum(x * beta)) %>% 
-      pull(lp)
+      filter(!is.na(x))
     
-    draws_a_raw <- rowMeans(draws_mat[, grepl("^a", colnames(draws_mat))])
-    resid <- rowMeans(draws_mat[, grepl("error", colnames(draws_mat))])
-    shape <- log_rate * beta_rate + shape_lp + resid
+    shape_lp <- if (nrow(x_shape)) sum(x_shape$x * x_shape$beta) else 0
+    shape <- log_rate * beta_rate + shape_lp + err_new # [S]
     
-    # Hazard estimates ---------------------------------------------------------
+    # Outputs
+    # Create time grid (in weeks)
+    t_max_yrs <- as.numeric(filter(input_param, param == "duration")$value_prep)
+    shiny::req(!is.na(t_max_yrs), t_max_yrs > 0)
+    t_yrs <- seq(0, t_max_yrs, length.out = 53)
+    t_wks <- t_yrs * 52
     
-    # Get time sequence
-    t_max <- as.numeric(filter(input_param, param == "duration")$value_prep)
-    t_years <- seq(0, t_max, length.out = 53)
-    t_weeks <- t_years * 52
-    
-    # Estimate hazard at each time point
+    # Instantaneous hazard
     haz <- vapply(
-      t_years, 
-      function(t) flexsurv::hgompertz(t, shape, rate), 
-      numeric(length(shape))
+      t_yrs,
+      function(tt) flexsurv::hgompertz(tt, shape = shape, rate = rate),
+      numeric(length(rate))
     )
     
-    # Summarise (2.5th, 50th, 97.5th)
-    sum_haz <- apply(haz, 2, quantile, c(0.025, 0.5, 0.975)) %>% 
-      t() %>% 
-      as_tibble() %>% 
-      mutate(t = t_weeks)
-    # 
-    # # Summary tables -----------------------------------------------------------
-    # 
-    # # Cumulative hazard and risk at horizon
-    # t_end <- tail(t_years, 1)
-    # 
-    # cumhaz_end <- if_else(
-    #   abs(shape) < 1e-6,
-    #   rate * t_end,
-    #   (rate / shape) * (exp(shape * t_end) - 1)
-    # )
-    # 
-    # p_end <- 1 - exp(-cumhaz_end)
-    # risk_sum <- quantile(p_end, c(0.025, 0.50, 0.975), na.rm = TRUE)
-    # 
-    # # Attrition thresholds
-    # p_over <- function(th) mean(p_end > th, na.rm = TRUE)
-    # 
-    # risk_p <- c(
-    #   p5 = prob_over(0.05), 
-    #   p10 = prob_over(0.10), 
-    #   p15 = prob_over(0.15),
-    #   p20 = prob_over(0.20),
-    #   p25 = prob_over(0.25),
-    #   p30 = prob_over(0.30)
-    # )
-    # 
-    # # Expected counts for planned sample
-    # N_input <- input_order %>% filter(param == "n_log") %>% pull(value_prep)
-    # N <- if (length(N_input) && !is.na(N_input)) round(exp(N_input)) else NA
-    # 
-    # count_sum <- if (!is.na(N)) {
-    #   quantile(
-    #     rbinom(length(p_end), N, p_end),
-    #     c(0.025, 0.975), na.rm = TRUE
-    #   )
-    # } else {
-    #   c(NA, NA, NA)
-    # }
-    # 
-    # # Start and end hazard rates
+    # Cumulative hazard (for getting risk)
+    chaz <- vapply(
+      t_yrs,
+      function(tt) flexsurv::Hgompertz(tt, shape = shape, rate = rate),
+      numeric(length(rate))
+    )
     
+    risk <- 1 - exp(-chaz)
+    
+    # Time-to-event
+    t2e <- exp(-chaz)
+    
+    # Quantiles
+    qfun <- function(M) {
+      M <- as.matrix(M)
+      qs <- apply(M, 2, function(x) stats::quantile(x, c(.025, .5, .975), na.rm = TRUE))
+      list(lo = as.numeric(qs[1, ]), md = as.numeric(qs[2, ]), hi = as.numeric(qs[3, ]))
+    }
+    
+    rq <- qfun(risk)
+    hq <- qfun(haz)
+    t2eq <- qfun(t2e)
+    
+    # Counts (if inputted by user)
+    N_input <- input_order %>% filter(param == "n_log") %>% pull(value_prep)
+    N_input <- as.numeric(N_input)
+    N <- if (!is.na(N_input)) as.integer(round(exp(N_input))) else NA_integer_
+    
+    # Get outputs
+    if (!is.na(N)) {
+      cCount <- N * risk
+      atRisk <- N * t2e
+      ccq <- qfun(cCount)
+      arq <- qfun(atRisk)
+    }
+    
+    # Summarise in tibble
+    sum_tbl <- tibble(
+      t_wks = t_wks,
+      risk_q025 = rq$lo, risk_q50 = rq$md, risk_q975 = rq$hi,
+      hazard_q025 = hq$lo, hazard_q50 = hq$md, hazard_q975 = hq$hi,
+      surv_q025 = t2eq$lo,  surv_q50 = t2eq$md,  surv_q975 = t2eq$hi
+    )
+    
+    if (!is.na(N)) {
+      sum_tbl <- bind_cols(
+        sum_tbl,
+        tibble(
+          drp_q50 = N - arq$md,
+          at_risk_q025 = arq$lo, at_risk_q50 = arq$md, at_risk_q975 = arq$hi,
+          cdrop_q025 = ccq$lo, cdrop_q50 = ccq$md, cdrop_q975 = ccq$hi
+        )
+      )
+    }
+    
+    print(sum_tbl)
   })
 }

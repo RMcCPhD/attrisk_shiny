@@ -2,19 +2,19 @@
 // Config
 const UI_HELPERS_CONFIG = {
   placeholders: {
-    duration:    '12 - 52',
+    duration:    '12 - 260',
     sample:      '30 - 1000',
     facilities:  '1 - 500',
     arms:        '2 - 6',
-    mean_age:    '18 - 100',
-    mean_bmi:    '18 - 50',
-    mean_sbp:    '60 - 140',
-    mean_hdl:    '1 - 4',
-    mean_total:  '1 - 4',
-    mean_t2dur:  '0.01 - 50',
-    mean_hba1c:  '6 - 9',
-    mean_egfr:   '60 - 120',
-    con_med:     '0 - 20',
+    age:         '18 - 100',
+    bmi:         '18 - 50',
+    sbp:         '60 - 140',
+    hdl:         '1 - 4',
+    totalc:      '1 - 4',
+    t2dur:       '0.01 - 50',
+    hba1c:       '6 - 9',
+    egfr:        '60 - 120',
+    conmed:      '0 - 20',
     comorbs:     '0 - 10'
   }
 };

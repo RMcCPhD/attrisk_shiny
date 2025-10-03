@@ -12,77 +12,45 @@ function(input, output, session) {
   source("R/design_user_inputs.R") # Prepare inputs, join betas
   source("R/design_predict.R") # Gompertz predictions
   
-  # Conditionally enable or disable action buttons -----------------------------
+  # Design page conditions -----------------------------------------------------
   
+  # Update action buttons (disabled -> usable) based on inputs
   observe({
+    have_duration <- isTruthy(input$duration)
+    have_sample   <- isTruthy(input$sample)
+    ready         <- have_duration && have_sample
     
-    # Get conduct inputs
-    conduct_inputs <- c(
-      input$mean_age,
-      input$mean_t2dur,
-      input$mean_hba1c,
-      input$mean_hdl,
-      input$mean_bmi,
-      input$mean_egfr,
-      input$mean_sbp,
-      input$mean_total,
-      input$con_med,
-      input$comorbs,
-      input$sex,
-      input$smoke,
-      input$race
+    # Toggle enabled/disabled
+    shinyjs::toggleState("predict_design", condition = ready)
+    shinyjs::toggleState("reset_design", condition = ready)
+    
+    # Choose labels based on what input is missing (duration, sample size)
+    lab_needed <- if (!have_duration && !have_sample) {
+      "Enter duration"
+    } else if (!have_duration) {
+      "Enter duration"
+    } else if (!have_sample) {
+      "Enter sample size"
+    } else {
+      "Predict (design)"
+    }
+    
+    # Predict button
+    updateActionButton(
+      session, "predict_design",
+      label = if (ready) "Predict (design)" else lab_needed
     )
     
-    # Conditions for design and conduct action buttons
-    design_ready <- !is.na(input$duration) & input$duration != ""
-    design_ready2 <- !is.na(input$duration2) & input$duration2 != ""
-    conduct_ready <- any(!is.na(conduct_inputs) & conduct_inputs != "")
-    
-    # Design action buttons
-    if (design_ready) {
-      shinyjs::enable("predict_design")
-      shinyjs::enable("reset_design")
-      updateActionButton(session, "predict_design", "Predict (design)")
-      updateActionButton(session, "reset_design", "Reset design features")
-    } else {
-      shinyjs::disable("predict_design")
-      shinyjs::disable("reset_design")
-      updateActionButton(session, "predict_design", "Enter duration")
-      updateActionButton(session, "reset_design", "Enter duration")
-    }
-    
-    if (design_ready2) {
-      shinyjs::enable("reset_design2")
-      updateActionButton(session, "reset_design2", "Reset design features")
-    } else {
-      shinyjs::disable("reset_design2")
-      updateActionButton(session, "reset_design2", "Enter duration")
-    }
-    
-    # Conduct action buttons
-    if (conduct_ready && design_ready2) {
-      shinyjs::enable("predict_conduct")
-      shinyjs::enable("reset_conduct")
-      updateActionButton(session, "predict_conduct", "Predict (conduct)")
-      updateActionButton(session, "reset_conduct", "Reset characteristics")
-    } else if (design_ready2 && !conduct_ready) {
-      shinyjs::disable("predict_conduct")
-      shinyjs::disable("reset_conduct")
-      updateActionButton(session, "predict_conduct", "Enter a characteristic")
-      updateActionButton(session, "reset_conduct", "Enter a characteristic")
-    } else {
-      shinyjs::disable("predict_conduct")
-      shinyjs::disable("reset_conduct")
-      updateActionButton(session, "predict_conduct", "Enter duration")
-      updateActionButton(session, "reset_conduct", "Enter duration")
-    }
+    # Reset button
+    updateActionButton(
+      session, "reset_design",
+      label = if (ready) "Reset design features" else lab_needed
+    )
   })
   
-  # Force minimum/maximum values for numeric inputs where violated -------------
-  
-  # Value thresholds
+  # Force minimum/maximum values for numeric inputs where violated
   value_limits <- list(
-    duration   = c(12, 260),
+    duration   = c(12, 52),
     sample     = c(30, 1000),
     facilities = c(1, 500),
     arms       = c(2, 6),
@@ -130,9 +98,9 @@ function(input, output, session) {
     session$sendCustomMessage("resetBox", "design_box")
   })
   
-  observeEvent(input$reset_conduct, {
-    session$sendCustomMessage("resetBox", "conduct_box")
-  })
+  # observeEvent(input$reset_conduct, {
+  #   session$sendCustomMessage("resetBox", "conduct_box")
+  # })
   
   # Prepare user inputs
   design_inputs <- tidy_inputs(input)
@@ -143,6 +111,9 @@ function(input, output, session) {
   # Render plots
   output$plot_cind_design <- renderPlot({
     design_predict() %>%
+      mutate(
+        across(contains("risk_"), ~ round(. * 100, 2))
+      ) %>% 
       ggplot(aes(x = t_wks, y = risk_q50, ymin = risk_q025, ymax = risk_q975)) +
       geom_line() +
       geom_ribbon(
@@ -151,7 +122,7 @@ function(input, output, session) {
         colour = "black",
         linetype = "dashed"
       ) +
-      labs(x = "Follow-up time (weeks)", y = "Attrition risk") +
+      labs(x = "Follow-up time (weeks)", y = "Attrition risk (%)") +
       scale_x_continuous(n.breaks = 6) +
       scale_y_continuous(n.breaks = 6) +
       theme_classic() +
@@ -163,7 +134,7 @@ function(input, output, session) {
   
   output$plot_hazard_design <- renderPlot({
     design_predict() %>%
-      ggplot(aes(x = t_wks, y = hazard_q50, ymin = hazard_q025, ymax = hazard_q975)) +
+      ggplot(aes(x = t_wks, y = hazard_q50)) +
       geom_line() +
       labs(x = "Follow-up time (weeks)", y = "Instantaneous hazard") +
       scale_x_continuous(n.breaks = 6) +
@@ -176,57 +147,41 @@ function(input, output, session) {
   })
   
   # Render summary table (nothing renders using renderDT, only renderTable)
-  output$sum_design <- renderTable(
-    design_predict() %>%
-      select(t_wks, drp_q50, contains(c("surv", "risk", "cdrop"))) %>%
-      mutate(
-        drp_q50 = round(drp_q50),
-        across(contains(c("surv", "risk", "cdrop")), ~ round(., 2)),
-        across(c(t_wks, drp_q50), as.integer),
-        t2e = paste0(surv_q50, " [", surv_q025, ", ", surv_q975, "]"),
-        risk = paste0(risk_q50, " [", risk_q025, ", ", risk_q975, "]")
-      ) %>% 
-      select(t_wks, at_risk_q50, drp_q50, risk, t2e) %>% 
-      rename(
-        "Follow-up time (weeks)" = t_wks,
-        "Participants at risk (median)" = at_risk_q50,
-        "Non-completers (median)" = drp_q50,
-        "Time-to-attrition (median [quantiles])" = t2e,
-        "Attrition risk (median [quantiles])" = risk,
-      )
-  )
-  
   output$sum_design <- DT::renderDT({
     df <- design_predict() %>%
       select(t_wks, drp_q50, contains(c("surv", "risk", "cdrop"))) %>%
       mutate(
-        across(c(drp_q50, starts_with("at_risk")), ~ round(.)),
+        across(c(, starts_with("at_risk")), ~ round(.)),
+        across(starts_with("risk"), ~ round(. * 100, 2)),
         across(c(contains(c("surv", "cdrop")), risk_q025:risk_q975), ~ round(., 2)),
         across(c(t_wks, drp_q50), as.integer),
         t2e = paste0(surv_q50, " [", surv_q025, ", ", surv_q975, "]"),
         risk = paste0(risk_q50, " [", risk_q025, ", ", risk_q975, "]")
       ) %>% 
-      select(t_wks, at_risk_q50, drp_q50, risk, t2e) %>% 
+      select(t_wks, at_risk_q50, drp_q50, risk_q50) %>% 
       rename(
         "Follow-up time (weeks)" = t_wks,
-        "Participants at risk (median)" = at_risk_q50,
-        "Non-completers (median)" = drp_q50,
-        "Time-to-attrition (median [quantiles])" = t2e,
-        "Attrition risk (median [quantiles])" = risk,
+        "Participants at risk" = at_risk_q50,
+        "Non-completers" = drp_q50,
+        "Attrition risk (%)" = risk_q50,
       )
     
     DT::datatable(
       df,
       rownames = FALSE,
-      class = "compact stripe hover",
+      class = "compact stripe hover cell-border",
+      lazyRender = TRUE,
       options = list(
         scrollY = 320,
-        scrollX = TRUE,
+        scrollX = FALSE,
         scrollCollapse = TRUE,
         paging = FALSE,
+        searching = FALSE,
+        fixedHeader = TRUE,
         autoWidth = TRUE,
-        order = list(),
-        searching = FALSE
+        columnDefs = list(
+          list(className = "dt-head-center dt-body-center", targets = "_all")
+        )
       )
     )
   })

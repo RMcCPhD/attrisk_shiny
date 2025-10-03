@@ -2,7 +2,7 @@
 // Config
 const UI_HELPERS_CONFIG = {
   placeholders: {
-    duration:    '12 - 260',
+    duration:    '12 - 52',
     sample:      '30 - 1000',
     facilities:  '1 - 500',
     arms:        '2 - 6',

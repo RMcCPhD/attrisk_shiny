@@ -3,6 +3,12 @@
 # Estimates hazard, cumulative hazard and cumulative incidence using
 # Gompertz parameters and scale of user-inputted time
 
+library(shiny)
+library(shinydashboard)
+library(tidyverse)
+library(posterior)
+library(DT)
+
 # Gather materials -------------------------------------------------------------
 
 # Import posterior draws and trial-level dataset
@@ -11,15 +17,15 @@ imp_df <- readRDS("www/data/design_df.rds")     # Trial dataset (for var names)
 
 # Shape coefficients
 shape_betas_df <- readr::read_csv("www/data/lm_res.csv") %>% 
-  dplyr::transmute(term, beta = estimate) %>%
-  dplyr::filter(term != "(Intercept)")
+  transmute(term, beta = estimate) %>%
+  filter(term != "(Intercept)")
 
 shape_betas_shr <- readRDS("www/data/lm_res_shrinkage.rds") # LASSO betas
 shape_betas_df$beta <- shape_betas_shr$betas
 
 # Separate rate beta for shape
 beta_rate <- filter(shape_betas_df, term == "rate")$beta
-shape_cov_betas <- dplyr::filter(shape_betas_df, term != "rate")
+shape_cov_betas <- filter(shape_betas_df, term != "rate")
 
 # Get residual SD for shape
 resid_sd <- shape_betas_shr$resid_sd
@@ -95,7 +101,7 @@ predict_design <- function(design_inputs) {
       filter(!is.na(x))
     
     shape_lp <- if (nrow(x_shape)) sum(x_shape$x * x_shape$beta) else 0
-    shape <- log_rate * beta_rate + shape_lp + err_new # [S]
+    shape <- rate * beta_rate + shape_lp + err_new # [S]
     
     # Outputs
     # Create time grid (in weeks)
@@ -118,6 +124,7 @@ predict_design <- function(design_inputs) {
       numeric(length(rate))
     )
     
+    # Risk
     risk <- 1 - exp(-chaz)
     
     # Time-to-event

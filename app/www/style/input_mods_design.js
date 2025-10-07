@@ -5,7 +5,7 @@
   // Config
   const UI_HELPERS_CONFIG = {
     placeholders: {
-      'design-duration':    '12 - 52',
+      'design-duration':    '12 - 200',
       'design-sample':      '30 - 1000',
       'design-facilities':  '1 - 500',
       'design-arms':        '2 - 6',
@@ -26,7 +26,7 @@
     applyPlaceholders(UI_HELPERS_CONFIG.placeholders);
   });
   
-  // Reset user inputs upon restart button activation
+  // Reset design inputs upon restart button activation
   if (!window.__resetBoxRegistered) {
     window.__resetBoxRegistered = true;
     Shiny.addCustomMessageHandler('resetBox', function(id) {

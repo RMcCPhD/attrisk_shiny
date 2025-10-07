@@ -10,7 +10,9 @@ function(input, output, session) {
   
   # Sourced scripts for server functionality
   source("R/design_user_inputs.R") # Prepare inputs, join betas
-  source("R/design_predict.R") # Gompertz predictions
+  source("R/design_predict.R")     # Gompertz predictions
+  source("R/conduct_user_inputs.R")
+  # source("R/conduct_predict.R")
   
   # Design page conditions -----------------------------------------------------
   
@@ -50,7 +52,7 @@ function(input, output, session) {
   
   # Force minimum/maximum values for numeric inputs where violated
   value_limits <- list(
-    "design-duration"   = c(12, 52),
+    # "design-duration"   = c(12, 200),
     "design-sample"     = c(30, 1000),
     "design-facilities" = c(1, 500),
     "design-arms"       = c(2, 6)
@@ -84,7 +86,8 @@ function(input, output, session) {
     
     # Toggle enabled/disabled
     shinyjs::toggleState("predict_conduct", condition = ready_conduct)
-    shinyjs::toggleState("reset_conduct", condition = ready_conduct)
+    shinyjs::toggleState("reset_design2", condition = ready_conduct)
+    shinyjs::toggleState("reset_char", condition = ready_conduct)
     
     # Choose labels based on what input is missing (duration, sample size)
     missing_conduct <- c(
@@ -107,16 +110,21 @@ function(input, output, session) {
       label = if (ready_conduct) "Predict risk" else lab_needed_conduct
     )
     
-    # Reset button
+    # Reset buttons
     updateActionButton(
-      session, "reset_conduct",
+      session, "reset_design2",
+      label = if (ready_conduct) "Reset design features" else lab_needed_conduct
+    )
+    
+    updateActionButton(
+      session, "reset_char",
       label = if (ready_conduct) "Reset characteristics" else lab_needed_conduct
     )
   })
   
   # Force minimum/maximum values for numeric inputs where violated
   conduct_value_limits <- list(
-    "conduct-duration"   = c(12, 52),
+    "conduct-duration"   = c(12, 200),
     "conduct-sample"     = c(30, 1000),
     "conduct-facilities" = c(1, 500),
     "conduct-arms"       = c(2, 6),
@@ -133,26 +141,30 @@ function(input, output, session) {
   )
   
   # Clamp input if thresholds exceeded
-  lapply(names(conduct_value_limits), function(id) {
-    observeEvent(input[[id]], ignoreInit = TRUE, {
-      val <- input[[id]]
-      if (is.null(val) || is.na(val)) return(NULL)
-      low <- conduct_value_limits[[id]][1]
-      high <- conduct_value_limits[[id]][2]
-      
-      if (val < low) {
-        updateNumericInput(session, id, value = low)
-      } else if (val > high) {
-        updateNumericInput(session, id, value = high)
-      }
-    })
-  })
+  # lapply(names(conduct_value_limits), function(id) {
+  #   observeEvent(input[[id]], ignoreInit = TRUE, {
+  #     val <- input[[id]]
+  #     if (is.null(val) || is.na(val)) return(NULL)
+  #     low <- conduct_value_limits[[id]][1]
+  #     high <- conduct_value_limits[[id]][2]
+  #     
+  #     if (val < low) {
+  #       updateNumericInput(session, id, value = low)
+  #     } else if (val > high) {
+  #       updateNumericInput(session, id, value = high)
+  #     }
+  #   })
+  # })
   
   # Predict design -------------------------------------------------------------
   
   # Clear inputs when reset buttons are used
   observeEvent(input$reset_design, {
-    session$sendCustomMessage("resetBox", "design_box")
+    session$sendCustomMessage("resetBox2", "design_box")
+  })
+  
+  observeEvent(input$reset_char, {
+    session$sendCustomMessage("resetBox3", "char_box")
   })
   
   # Prepare user inputs
@@ -214,7 +226,6 @@ function(input, output, session) {
       get_top5 <- top5()
       top5_df <- bind_rows(get_top5) %>% 
         mutate(across(contains("risk_"), ~ round(. * 100, 2)))
-      print(top5_df)
 
       p <- p + 
         geom_line(
@@ -280,6 +291,8 @@ function(input, output, session) {
     )
   })
   
+  # Save design outputs --------------------------------------------------------
+  
   # Create outputs downloadable by user
   observe({
     shinyjs::toggleState(
@@ -287,8 +300,6 @@ function(input, output, session) {
       condition = isTRUE(input$save_outputs) && length(input$save_select) > 0
     )
   })
-  
-  # Save design outputs --------------------------------------------------------
   
   # Helpers for generating plots to save
   make_risk_plot <- function(user_df, top5_df = NULL, overlay = FALSE) {
@@ -466,9 +477,15 @@ function(input, output, session) {
   # Predict conduct ------------------------------------------------------------
   
   # Clear inputs when reset buttons are used
-  observeEvent(input$reset_conduct, {
-    session$sendCustomMessage("resetBox", "conduct_box")
+  observeEvent(input$reset_design2, {
+    session$sendCustomMessage("resetBox2", "design2_box")
   })
+  
+  # Prepare inputs
+  conduct_inputs <- eventReactive(input$predict_conduct, {
+    bind_rows(tidy_design_inputs(input), tidy_char_inputs(input))
+  })
+  print(conduct_inputs)
   
   # User guide -----------------------------------------------------------------
   

@@ -60,10 +60,10 @@ tidy_inputs <- function(input) {
           name == "trttype" & value == "Active comparator" ~ "1",
           name == "trttype" & grepl("Placebo", value) & grepl("Active", value)  ~ "2",
           # Age limits as binary value
-          name == "age_lower" & grepl("18yr", value) ~ "0",
-          name == "age_lower" & !grepl(">18yr", value)  ~ "1",
-          name == "age_upper" & grepl("70yr", value) ~ "0",
-          name == "age_upper" & !grepl(">70yr", value) ~ "1",
+          name == "age_lower" & value == "18yr" ~ "0",
+          name == "age_lower" & value == ">18yr" ~ "1",
+          name == "age_upper" & value == "70yr" ~ "0",
+          name == "age_upper" & value == ">70yr" ~ "1",
           # BMI limits as binary value
           (name == "min_bmi" | name == "max_bmi") & value != "None"  ~ "1",
           (name == "min_bmi" | name == "max_bmi") & value == "None" ~ "0",
@@ -91,7 +91,7 @@ tidy_inputs <- function(input) {
     
     # Prepare param variable for joining with betas
     input_param <- input_tidy %>%
-      mutate(value = if_else(name == "trttype", NA, value)) %>%
+      mutate(value = if_else(name == "trttype", NA_character_, value)) %>%
       separate_rows(value, sep = ", ") %>%
       mutate(
         param = case_when(

@@ -250,7 +250,7 @@ dashboardPage(
             height = 462,
             title = tags$b("Trial design features"),
             div(
-              id = "conduct_box",
+              id = "design2_box",
               column(
                 width = 3,
                 numericInput(
@@ -272,6 +272,13 @@ dashboardPage(
                   "conduct-arms", "Number of arms",
                   value = NA, min = 2, max = 6,
                   width = "170px"
+                ),
+                actionButton(
+                  "reset_design2", "Enter duration", 
+                  class = "btn-warning",
+                  disabled = TRUE,
+                  width = "160px",
+                  style = "font-weight: bold; color:white; font-size:125%%"
                 )
               ),
               column(
@@ -356,7 +363,7 @@ dashboardPage(
             height = 462,
             title = tags$b("Participant baseline characteristics"),
             div(
-              id = "conduct_box",
+              id = "char_box",
               column(
                 width = 3,
                 numericInput(
@@ -380,7 +387,7 @@ dashboardPage(
                   width = "170px"
                 ),
                 actionButton(
-                  "reset_conduct", "Enter duration", 
+                  "reset_char", "Enter duration", 
                   class = "btn-warning",
                   disabled = TRUE,
                   width = "160px",

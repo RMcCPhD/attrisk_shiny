@@ -34,4 +34,40 @@
   $(document).on('shiny:connected', function() {
     applyPlaceholders(UI_HELPERS_CONFIG.placeholders);
   });
+  
+  // Reset user inputs upon restart button activation
+  if (!window.__resetBox2Registered) {
+    window.__resetBox2Registered = true;
+    Shiny.addCustomMessageHandler('resetBox2', function(id) {
+      const box = document.getElementById(id);
+      if (!box) return;
+      const inputs = box.querySelectorAll('input, select, textarea');
+      inputs.forEach(el => {
+        if (el.type === 'checkbox' || el.type === 'radio') {
+          el.checked = el.defaultChecked;
+        } else {
+          el.value = el.defaultValue;
+        }
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    });
+  }
+  
+  // Reset baseline characteristic inputs upon restart button activation
+  if (!window.__resetBox3Registered) {
+    window.__resetBox3Registered = true;
+    Shiny.addCustomMessageHandler('resetBox3', function(id) {
+      const box = document.getElementById(id);
+      if (!box) return;
+      const inputs = box.querySelectorAll('input, select, textarea');
+      inputs.forEach(el => {
+        if (el.type === 'checkbox' || el.type === 'radio') {
+          el.checked = el.defaultChecked;
+        } else {
+          el.value = el.defaultValue;
+        }
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    });
+  }
 })();

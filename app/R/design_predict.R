@@ -78,7 +78,6 @@ predict_design <- function(design_inputs) {
     
     # Get prepared user inputs
     input_param <- design_inputs()
-    print(input_param)
     
     # Match inputs to betas
     input_order <- map_nms %>% 

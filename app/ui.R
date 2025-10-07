@@ -109,19 +109,101 @@ dashboardPage(
                   width = "170px"
                 ),
                 numericInput(
-                  "design-sample", "Sample size",
-                  value = NA, min = 30, max = 1000,
-                  width = "170px"
-                ),
-                numericInput(
-                  "design-facilities", "Number of sites",
-                  value = NA, min = 1, max = 500,
-                  width = "170px"
-                ),
-                numericInput(
                   "design-arms", "Number of arms",
                   value = NA, min = 2, max = 6,
                   width = "170px"
+                ),
+                radioButtons(
+                  "design-sample_size", "Sample size",
+                  c("Small (<500)", "Medium (500 - 999)", "Large (>=1000)"),
+                  inline = FALSE,
+                  selected = "Small (<500)"
+                ),
+                numericInput(
+                  "design-est_sample", "Estimated sample size",
+                  value = NA,
+                  width = "170px"
+                )
+              ),
+              column(
+                width = 3,
+                radioButtons(
+                  "design-age_lower", "Lower age limits",
+                  c("18yr", ">18yr"),
+                  inline = TRUE,
+                  selected = "18yr"
+                ),
+                radioButtons(
+                  "design-bmi_lower", "Lower bmi limits",
+                  c("None", "<=25 kg/m2"),
+                  inline = TRUE,
+                  selected = "None"
+                ),
+                radioButtons(
+                  "design-egfr_lower", "Lower eGFR limits",
+                  c("None", "<=30 ml/min/1.73m2", ">30 ml/min/1.73m2"),
+                  inline = FALSE,
+                  selected = "None"
+                ),
+                radioButtons(
+                  "design-phase", "Phase",
+                  c("3", "4"),
+                  inline = TRUE,
+                  selected = "3"
+                ),
+                radioButtons(
+                  "design-n_facilities", "Number of sites",
+                  c("<50", "50 - 99", ">=100"),
+                  inline = FALSE,
+                  selected = ""
+                )
+              ),
+              column(
+                width = 3,
+                radioButtons(
+                  "design-age_upper", "Upper age limits*",
+                  c("70yr", ">70yr"),
+                  inline = TRUE,
+                  selected = "70yr"
+                ),
+                radioButtons(
+                  "design-bmi_upper", "Upper bmi limits",
+                  c("None", "<45 kg/m2"),
+                  inline = TRUE,
+                  selected = "None"
+                ),
+                radioButtons(
+                  "design-egfr_upper", "Upper eGFR limits",
+                  c("None", "<=60 ml/min/1.73m2", ">60 ml/min/1.73m2"),
+                  inline = FALSE,
+                  selected = "None"
+                ),
+                radioButtons(
+                  "design-poms", "Number of POMs",
+                  c("1", ">1"),
+                  inline = TRUE,
+                  selected = "1"
+                ),
+                checkboxGroupInput(
+                  "design-trttype", "Comparators",
+                  c("Placebo", "Active comparator"),
+                  selected = "Placebo"
+                )
+              ),
+              column(
+                width = 3,
+                radioButtons(
+                  "design-blind", "Blinding type",
+                  c("Open label", "Double", "Triple", "Quadruple"),
+                  selected = "Open label"
+                ),
+                checkboxGroupInput(
+                  "design-who_reg", "WHO regions involved",
+                  c(
+                    "African", "The Americas*",
+                    "Eastern Mediterranean", "European*",
+                    "SE Asian", "Western Pacific"
+                  )
                 ),
                 actionButton(
                   "reset_design", "Enter duration", 
@@ -130,88 +212,13 @@ dashboardPage(
                   width = "160px",
                   style = "font-weight: bold; color:white; font-size:125%%"
                 ),
-                div(style = "height: 15px;"),
+                div(style = "height: 10px;"),
                 actionButton(
                   "predict_design", "Enter duration", 
                   class = "btn-success",
                   disabled = TRUE,
                   width = "160px",
                   style = "font-weight: bold; color:white; font-size:125%%"
-                )
-              ),
-              column(
-                width = 3,
-                radioButtons(
-                  "age_lower", "Lower age limits",
-                  c("18yr", ">18yr"),
-                  inline = TRUE,
-                  selected = "18yr"
-                ),
-                radioButtons(
-                  "bmi_lower", "Lower bmi limits",
-                  c("None", "<=25 kg/m2"),
-                  inline = TRUE,
-                  selected = "None"
-                ),
-                radioButtons(
-                  "egfr_lower", "Lower eGFR limits",
-                  c("None", "<=30 ml/min/1.73m2", ">30 ml/min/1.73m2"),
-                  inline = FALSE,
-                  selected = "None"
-                ),
-                radioButtons(
-                  "phase", "Phase",
-                  c("3", "4"),
-                  inline = TRUE,
-                  selected = "3"
-                ),
-                checkboxGroupInput(
-                  "trttype", "Comparators",
-                  c("Placebo", "Active comparator"),
-                  selected = "Placebo"
-                )
-              ),
-              column(
-                width = 3,
-                radioButtons(
-                  "age_upper", "Upper age limits*",
-                  c("70yr", ">70yr"),
-                  inline = TRUE,
-                  selected = "70yr"
-                ),
-                radioButtons(
-                  "bmi_upper", "Upper bmi limits",
-                  c("None", "<45 kg/m2"),
-                  inline = TRUE,
-                  selected = "None"
-                ),
-                radioButtons(
-                  "egfr_upper", "Upper eGFR limits",
-                  c("None", "<=60 ml/min/1.73m2", ">60 ml/min/1.73m2"),
-                  inline = FALSE,
-                  selected = "None"
-                ),
-                radioButtons(
-                  "poms", "Number of POMs",
-                  c("1", ">1"),
-                  inline = TRUE,
-                  selected = "1"
-                )
-              ),
-              column(
-                width = 3,
-                radioButtons(
-                  "blind", "Blinding type",
-                  c("Open label", "Double", "Triple", "Quadruple"),
-                  selected = "Open label"
-                ),
-                checkboxGroupInput(
-                  "who_reg", "WHO regions involved",
-                  c(
-                    "African", "The Americas*",
-                    "Eastern Mediterranean", "European*",
-                    "SE Asian", "Western Pacific"
-                  )
                 )
               )
             )

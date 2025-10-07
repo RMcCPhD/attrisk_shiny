@@ -9,30 +9,24 @@ library(DT)
 function(input, output, session) {
   
   # Sourced scripts for server functionality
-  source("R/design_user_inputs.R") # Prepare inputs, join betas
-  source("R/design_predict.R")     # Gompertz predictions
+  source("R/design_user_inputs.R")  # Prepare inputs, join betas
+  source("R/design_predict.R")      # Gompertz predictions
   source("R/conduct_user_inputs.R")
-  # source("R/conduct_predict.R")
+  source("R/conduct_predict.R")
   
   # Design page conditions -----------------------------------------------------
   
   # Update action buttons (disabled -> usable) based on inputs
   observe({
     have_duration <- isTruthy(input$"design-duration")
-    have_sample   <- isTruthy(input$"design-sample")
-    ready         <- have_duration && have_sample
     
     # Toggle enabled/disabled
-    shinyjs::toggleState("predict_design", condition = ready)
-    shinyjs::toggleState("reset_design", condition = ready)
+    shinyjs::toggleState("predict_design", condition = have_duration)
+    shinyjs::toggleState("reset_design", condition = have_duration)
     
     # Choose labels based on what input is missing (duration, sample size)
-    lab_needed <- if (!have_duration && !have_sample) {
+    lab_needed <- if (!have_duration) {
       "Enter duration"
-    } else if (!have_duration) {
-      "Enter duration"
-    } else if (!have_sample) {
-      "Enter sample size"
     } else {
       "Predict (design)"
     }
@@ -40,20 +34,19 @@ function(input, output, session) {
     # Predict button
     updateActionButton(
       session, "predict_design",
-      label = if (ready) "Predict risk" else lab_needed
+      label = if (have_duration) "Predict risk" else lab_needed
     )
     
     # Reset button
     updateActionButton(
       session, "reset_design",
-      label = if (ready) "Reset design features" else lab_needed
+      label = if (have_duration) "Reset design features" else lab_needed
     )
   })
   
   # Force minimum/maximum values for numeric inputs where violated
   value_limits <- list(
     "design-duration"   = c(12, 520),
-    "design-sample"     = c(30, 1000),
     "design-facilities" = c(1, 500),
     "design-arms"       = c(2, 6)
   )
@@ -74,87 +67,58 @@ function(input, output, session) {
     })
   })
   
-  # Conduct page conditions ----------------------------------------------------
+  # Assign an estimated sample size value based on sample size input
+  # Defaults:
+  # 250 (for reference - small (<500), 750 (medium (500-999), 1250 (large (>1000)))
   
-  # Update action buttons (disabled -> usable) based on inputs
+  # Set defaults
+  sample_defaults <- list(
+    "Small (<500)"        = list(value = 250,  min = 30,   max = 499),
+    "Medium (500 - 999)"  = list(value = 750,  min = 500,  max = 999),
+    "Large (>=1000)"      = list(value = 1250, min = 1000, max = 10000)
+  )
+  
+  # Apply defaults upon app loading with reference set (small)
   observe({
-    have_duration_conduct <- isTruthy(input$"conduct-duration")
-    have_sample_conduct   <- isTruthy(input$"conduct-sample")
-    have_age_conduct      <- isTruthy(input$"conduct-age")
-    
-    ready_conduct <- have_duration_conduct && have_sample_conduct && have_age_conduct
-    
-    # Toggle enabled/disabled
-    shinyjs::toggleState("predict_conduct", condition = ready_conduct)
-    shinyjs::toggleState("reset_design2", condition = ready_conduct)
-    shinyjs::toggleState("reset_char", condition = ready_conduct)
-    
-    # Choose labels based on what input is missing (duration, sample size)
-    missing_conduct <- c(
-      if (!have_duration_conduct) "duration",
-      if (!have_sample_conduct) "sample size",
-      if (!have_age_conduct) "age"
-    )
-    
-    lab_needed_conduct <- if ("duration" %in% missing_conduct) {
-      paste("Enter duration")
-    } else if ("sample size" %in% missing_conduct) {
-      paste("Enter sample size")
-    } else {
-      paste("Enter age")
-    }
-    
-    # Predict button
-    updateActionButton(
-      session, "predict_conduct",
-      label = if (ready_conduct) "Predict risk" else lab_needed_conduct
-    )
-    
-    # Reset buttons
-    updateActionButton(
-      session, "reset_design2",
-      label = if (ready_conduct) "Reset design features" else lab_needed_conduct
-    )
-    
-    updateActionButton(
-      session, "reset_char",
-      label = if (ready_conduct) "Reset characteristics" else lab_needed_conduct
+    req(isTruthy(input$`design-sample_size`))
+    d <- sample_defaults[[input$`design-sample_size`]]
+    updateNumericInput(
+      session, "design-est_sample",
+      value = d$value, min = d$min, max = d$max
     )
   })
   
-  # Force minimum/maximum values for numeric inputs where violated
-  conduct_value_limits <- list(
-    "conduct-duration"   = c(12, 520),
-    "conduct-sample"     = c(30, 1000),
-    "conduct-facilities" = c(1, 500),
-    "conduct-arms"       = c(2, 6),
-    "conduct-age"        = c(18, 100),
-    "conduct-t2dur"      = c(0.01, 50),
-    "conduct-hba1c"      = c(6, 9),
-    "conduct-hdl"        = c(1, 4),
-    "conduct-bmi"        = c(19, 50),
-    "conduct-egfr"       = c(60, 120),
-    "conduct-sbp"        = c(60, 140),
-    "conduct-totalc"     = c(1, 4),
-    "conduct-conmed"     = c(0, 20),
-    "conduct-comorbs"    = c(0, 10)
-  )
+  # Update default when radio changes
+  observeEvent(input$`design-sample_size`, {
+    d <- sample_defaults[[ input$`design-sample_size` ]]
+    current <- isolate(input$`design-est_sample`)
+    # Keep the user's value if it fits, otherwise use default
+    new_value <- if (!is.null(current) && !is.na(current) &&
+                     current >= d$min && current <= d$max) current else d$value
+    
+    updateNumericInput(
+      session, "design-est_sample",
+      value = new_value, min = d$min, max = d$max
+    )
+  })
   
-  # Clamp input if thresholds exceeded
-  # lapply(names(conduct_value_limits), function(id) {
-  #   observeEvent(input[[id]], ignoreInit = TRUE, {
-  #     val <- input[[id]]
-  #     if (is.null(val) || is.na(val)) return(NULL)
-  #     low <- conduct_value_limits[[id]][1]
-  #     high <- conduct_value_limits[[id]][2]
-  #     
-  #     if (val < low) {
-  #       updateNumericInput(session, id, value = low)
-  #     } else if (val > high) {
-  #       updateNumericInput(session, id, value = high)
-  #     }
-  #   })
-  # })
+  # Clamp user entries to bounds for each radio button
+  observeEvent(input$`design-est_sample`, {
+    d <- sample_defaults[[ input$`design-sample_size` ]]
+    val <- input$`design-est_sample`
+    
+    # If box is cleared, reset to default for radio button
+    if (is.null(val) || is.na(val) || val == "") {
+      updateNumericInput(session, "design-est_sample", value = d$value)
+      return()
+    }
+    
+    # Otherwise clamp to boundaries
+    clamped <- max(d$min, min(d$max, val))
+    if (!identical(val, clamped)) {
+      updateNumericInput(session, "design-est_sample", value = clamped)
+    }
+  })
   
   # Predict design -------------------------------------------------------------
   
@@ -254,19 +218,16 @@ function(input, output, session) {
   # Render summary table (nothing renders using renderDT, only renderTable)
   output$sum_design <- DT::renderDT({
     df <- design_predict() %>%
-      select(t_wks, drp_q50, contains(c("surv", "risk", "cdrop"))) %>%
+      select(t_wks, compl_q50, drp_q50, contains(c("surv", "risk"))) %>% 
       mutate(
-        across(c(, starts_with("at_risk")), ~ round(.)),
+        across(c(t_wks, compl_q50, drp_q50, starts_with("at_risk")), ~ round(.)),
         across(starts_with("risk"), ~ round(. * 100, 2)),
-        across(c(contains(c("surv", "cdrop")), risk_q025:risk_q975), ~ round(., 2)),
-        across(c(t_wks, drp_q50), as.integer),
-        t2e = paste0(surv_q50, " [", surv_q025, ", ", surv_q975, "]"),
-        risk = paste0(risk_q50, " [", risk_q025, ", ", risk_q975, "]")
+        across(c(t_wks, compl_q50, drp_q50), ~ as.integer(.))
       ) %>% 
-      select(t_wks, at_risk_q50, drp_q50, risk_q50) %>% 
+      select(t_wks, compl_q50, drp_q50, risk_q50) %>%
       rename(
         "Follow-up time (weeks)" = t_wks,
-        "Participants at risk" = at_risk_q50,
+        "Participants at risk" = compl_q50,
         "Non-completers" = drp_q50,
         "Attrition risk (%)" = risk_q50,
       )
@@ -472,6 +433,88 @@ function(input, output, session) {
         footer = tagList(modalButton("Close"))
       )
     )
+  })
+  
+  # Conduct page conditions ----------------------------------------------------
+  
+  # Update action buttons (disabled -> usable) based on inputs
+  observe({
+    have_duration_conduct <- isTruthy(input$"conduct-duration")
+    have_sample_conduct   <- isTruthy(input$"conduct-sample")
+    have_age_conduct      <- isTruthy(input$"conduct-age")
+    
+    ready_conduct <- have_duration_conduct && have_sample_conduct && have_age_conduct
+    
+    # Toggle enabled/disabled
+    shinyjs::toggleState("predict_conduct", condition = ready_conduct)
+    shinyjs::toggleState("reset_design2", condition = ready_conduct)
+    shinyjs::toggleState("reset_char", condition = ready_conduct)
+    
+    # Choose labels based on what input is missing (duration, sample size)
+    missing_conduct <- c(
+      if (!have_duration_conduct) "duration",
+      if (!have_sample_conduct) "sample size",
+      if (!have_age_conduct) "age"
+    )
+    
+    lab_needed_conduct <- if ("duration" %in% missing_conduct) {
+      paste("Enter duration")
+    } else if ("sample size" %in% missing_conduct) {
+      paste("Enter sample size")
+    } else {
+      paste("Enter age")
+    }
+    
+    # Predict button
+    updateActionButton(
+      session, "predict_conduct",
+      label = if (ready_conduct) "Predict risk" else lab_needed_conduct
+    )
+    
+    # Reset buttons
+    updateActionButton(
+      session, "reset_design2",
+      label = if (ready_conduct) "Reset design features" else lab_needed_conduct
+    )
+    
+    updateActionButton(
+      session, "reset_char",
+      label = if (ready_conduct) "Reset characteristics" else lab_needed_conduct
+    )
+  })
+  
+  # Force minimum/maximum values for numeric inputs where violated
+  conduct_value_limits <- list(
+    "conduct-duration"   = c(12, 520),
+    "conduct-sample"     = c(30, 1000),
+    "conduct-facilities" = c(1, 500),
+    "conduct-arms"       = c(2, 6),
+    "conduct-age"        = c(18, 100),
+    "conduct-t2dur"      = c(0.01, 50),
+    "conduct-hba1c"      = c(6, 9),
+    "conduct-hdl"        = c(1, 4),
+    "conduct-bmi"        = c(19, 50),
+    "conduct-egfr"       = c(60, 120),
+    "conduct-sbp"        = c(60, 140),
+    "conduct-totalc"     = c(1, 4),
+    "conduct-conmed"     = c(0, 20),
+    "conduct-comorbs"    = c(0, 10)
+  )
+  
+  # Clamp input if thresholds exceeded
+  lapply(names(conduct_value_limits), function(id) {
+    observeEvent(input[[id]], ignoreInit = TRUE, {
+      val <- input[[id]]
+      if (is.null(val) || is.na(val)) return(NULL)
+      low <- conduct_value_limits[[id]][1]
+      high <- conduct_value_limits[[id]][2]
+
+      if (val < low) {
+        updateNumericInput(session, id, value = low)
+      } else if (val > high) {
+        updateNumericInput(session, id, value = high)
+      }
+    })
   })
   
   # Predict conduct ------------------------------------------------------------

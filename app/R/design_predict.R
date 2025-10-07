@@ -17,8 +17,14 @@ library(DT)
 # Obtain quantiles
 qfun <- function(M) {
   M <- as.matrix(M)
-  qs <- apply(M, 2, function(x) stats::quantile(x, c(.025, .5, .975), na.rm = TRUE))
-  list(lo = as.numeric(qs[1, ]), md = as.numeric(qs[2, ]), hi = as.numeric(qs[3, ]))
+  qs <- apply(
+    M, 2, function(x) stats::quantile(x, c(.025, .5, .975), na.rm = TRUE
+  ))
+  list(
+    lo = as.numeric(qs[1, ]), 
+    md = as.numeric(qs[2, ]), 
+    hi = as.numeric(qs[3, ])
+  )
 }
 
 # Gather materials -------------------------------------------------------------
@@ -119,7 +125,7 @@ predict_design <- function(design_inputs) {
     # Create time grid (in weeks)
     t_max_yrs <- as.numeric(filter(input_param, param == "duration")$value_prep)
     shiny::req(!is.na(t_max_yrs), t_max_yrs > 0)
-    t_yrs <- seq(0, t_max_yrs, length.out = 53)
+    t_yrs <- seq(0, t_max_yrs, length.out = round(t_max_yrs * 52))
     t_wks <- t_yrs * 52
     
     # Instantaneous hazard
@@ -129,55 +135,38 @@ predict_design <- function(design_inputs) {
       numeric(length(rate))
     )
     
-    # Cumulative hazard (for getting risk)
-    chaz <- vapply(
+    # Cumulative distribution (i.e. risk)
+    phaz <- vapply(
       t_yrs,
-      function(tt) flexsurv::Hgompertz(tt, shape = shape, rate = rate),
+      function(tt) flexsurv::pgompertz(tt, shape = shape, rate = rate),
       numeric(length(rate))
     )
     
-    # Risk
-    risk <- 1 - exp(-chaz)
-    
     # Time-to-event
-    t2e <- exp(-chaz)
+    t2e <- 1 - phaz
     
     # Quantiles
-    rq <- qfun(risk)
+    rq <- qfun(phaz)
     hq <- qfun(haz)
     t2eq <- qfun(t2e)
     
     # Counts (if inputted by user)
-    N_input <- input_order %>% filter(param == "n_log") %>% pull(value_prep)
-    N_input <- as.numeric(N_input)
-    N <- if (!is.na(N_input)) as.integer(round(exp(N_input))) else NA_integer_
+    N_input <- filter(input_param, param == "est_sample") %>% pull(value_prep)
+    N <- as.numeric(N_input)
     
-    # Get outputs
-    if (!is.na(N)) {
-      cCount <- N * risk
-      atRisk <- N * t2e
-      ccq <- qfun(cCount)
-      arq <- qfun(atRisk)
-    }
+    # Completer/Dropout estimates (using estimated sample)
+    cCount <- N * phaz
+    atRisk <- N * t2e
+    ccq <- qfun(cCount)
+    arq <- qfun(atRisk)
     
     # Summarise in tibble
     sum_tbl <- tibble(
-      t_wks = t_wks,
+      t_yrs = t_yrs, t_wks = t_wks,
+      compl_q50 = arq$md, drp_q50 = N - compl_q50,
       risk_q025 = rq$lo, risk_q50 = rq$md, risk_q975 = rq$hi,
-      hazard_q025 = hq$lo, hazard_q50 = hq$md, hazard_q975 = hq$hi,
-      surv_q025 = t2eq$lo,  surv_q50 = t2eq$md,  surv_q975 = t2eq$hi
+      hazard_q025 = hq$lo, hazard_q50 = hq$md, hazard_q975 = hq$hi
     )
-    
-    if (!is.na(N)) {
-      sum_tbl <- bind_cols(
-        sum_tbl,
-        tibble(
-          drp_q50 = N - arq$md,
-          at_risk_q025 = arq$lo, at_risk_q50 = arq$md, at_risk_q975 = arq$hi,
-          cdrop_q025 = ccq$lo, cdrop_q50 = ccq$md, cdrop_q975 = ccq$hi
-        )
-      )
-    }
     
     print(sum_tbl)
   })

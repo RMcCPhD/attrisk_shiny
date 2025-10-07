@@ -6,7 +6,6 @@
   const UI_HELPERS_CONFIG = {
     placeholders: {
       'design-duration':    '12 - 520',
-      'design-sample':      '30 - 1000',
       'design-facilities':  '1 - 500',
       'design-arms':        '2 - 6',
     }

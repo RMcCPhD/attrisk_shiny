@@ -1,5 +1,5 @@
 
-# Prepares user inputs
+# Prepares user inputs for trial design
 # Tidying inputs to match naming used for posterior draws
 # Formats values according to model covariate specifications
 
@@ -9,10 +9,10 @@ tidy_inputs <- function(input) {
     
     # Get list of inputs
     inputs <- list(
-      duration     = input$duration,
-      n_log        = log(input$sample),
-      n_facilities = log(input$facilities),
-      n_arms       = input$arms,
+      duration     = input$"design-duration",
+      n_log        = log(input$"design-sample"),
+      n_facilities = log(input$"design-facilities"),
+      n_arms       = input$"design-arms",
       age_lower    = input$age_lower,
       age_upper    = input$age_upper,
       min_bmi      = input$bmi_lower,

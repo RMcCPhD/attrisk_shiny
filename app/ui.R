@@ -105,7 +105,7 @@ dashboardPage(
                 width = 3,
                 numericInput(
                   "design-duration", "Duration (weeks)",
-                  value = NA, min = 12, max = 52,
+                  value = NA, min = 12, max = 520,
                   width = "170px"
                 ),
                 numericInput(

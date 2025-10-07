@@ -52,7 +52,7 @@ function(input, output, session) {
   
   # Force minimum/maximum values for numeric inputs where violated
   value_limits <- list(
-    # "design-duration"   = c(12, 200),
+    "design-duration"   = c(12, 520),
     "design-sample"     = c(30, 1000),
     "design-facilities" = c(1, 500),
     "design-arms"       = c(2, 6)
@@ -124,7 +124,7 @@ function(input, output, session) {
   
   # Force minimum/maximum values for numeric inputs where violated
   conduct_value_limits <- list(
-    "conduct-duration"   = c(12, 200),
+    "conduct-duration"   = c(12, 520),
     "conduct-sample"     = c(30, 1000),
     "conduct-facilities" = c(1, 500),
     "conduct-arms"       = c(2, 6),

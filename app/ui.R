@@ -24,7 +24,7 @@ dashboardPage(
           condition = "input.overlay_top5",
           div(
             style = "margin:8px 0 12px 8px; padding:8px; border-left:3px solid #3c8dbc;",
-            strong("Similar trials (NCT IDs)"),
+            strong("Similar trials (NCT IDs) - risk"),
             tags$div(style = "font-size: 15px; margin-top:6px;", uiOutput("top5_ids"))
           )
         ),

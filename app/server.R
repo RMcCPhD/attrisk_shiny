@@ -156,18 +156,25 @@ function(input, output, session) {
     d5 <- top5()
     req(!is.null(d5), nrow(d5) > 0)
     
-    # Get the 5 unique trial IDs in the order they were selected
-    ids <- d5 %>% pull(trial_id)
+    # Get the 5 unique trial IDs and risk in the order they were selected
+    ids <- d5 %>% select(trial_id, risk_q50)
     
     # Build a neat ordered list of links to ClinicalTrials.gov
     tags$ol(
       style = "padding-left: 18px; margin: 0;",
-      lapply(ids, function(id) {
+      lapply(seq_len(nrow(ids)), function(i) {
+        
+        id <- ids$trial_id[i]
+        risk <- ids$risk_q50[i]
+        risk_txt <- sprintf("%.2f%%", risk)
+        
         tags$li(
-          tags$a(href = paste0("https://clinicaltrials.gov/study/", id),
-                 target = "_blank",
-                 style = "text-decoration:none;",
-                 id)
+          tags$a(
+            href = paste0("https://clinicaltrials.gov/study/", id),
+            target = "_blank",
+            style = "text-decoration:none;",
+            sprintf("%s - %s", id, risk_txt)
+          )
         )
       })
     )

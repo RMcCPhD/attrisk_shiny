@@ -116,17 +116,17 @@ function(input, output, session) {
   })
   
   # Conditions to remove outputs when reset button is pressed
-  plots_visible <- reactiveVal(FALSE)
-  sum_visible <- reactiveVal(FALSE)
+  design_plots_visible <- reactiveVal(FALSE)
+  design_sum_visible <- reactiveVal(FALSE)
   
   observeEvent(input$predict_design, {
-    plots_visible(TRUE)
-    sum_visible(TRUE)
+    design_plots_visible(TRUE)
+    design_sum_visible(TRUE)
   })
   
   observeEvent(input$reset_design, {
-    plots_visible(FALSE)
-    sum_visible(FALSE)
+    design_plots_visible(FALSE)
+    design_sum_visible(FALSE)
     updateCheckboxInput(session, "overlay_top5", value = FALSE)
   })
   
@@ -187,13 +187,13 @@ function(input, output, session) {
   })
   
   output$plot_hazard_design <- renderPlot({
-    req(plots_visible())
+    req(design_plots_visible())
     design_haz_plot(design_predict())
   })
   
   # Render summary table
   output$sum_design <- DT::renderDT({
-    req(sum_visible())
+    req(design_sum_visible())
     design_sum(design_predict())$dt
   })
   
@@ -323,6 +323,21 @@ function(input, output, session) {
     }
   })
   
+  # Conditions to remove outputs when reset button is pressed
+  conduct_plots_visible <- reactiveVal(FALSE)
+  conduct_sum_visible <- reactiveVal(FALSE)
+  
+  observeEvent(input$predict_conduct, {
+    conduct_plots_visible(TRUE)
+    conduct_sum_visible(TRUE)
+  })
+  
+  observeEvent(input$reset_conduct, {
+    conduct_plots_visible(FALSE)
+    conduct_sum_visible(FALSE)
+    updateCheckboxInput(session, "overlay_top5", value = FALSE)
+  })
+  
   # Predict conduct ------------------------------------------------------------
   
   # Clear inputs when reset buttons are used
@@ -331,12 +346,34 @@ function(input, output, session) {
     session$sendCustomMessage("resetBox3", "char_box")
   })
   
+  observeEvent(input$reset_conduct, {
+    session$sendCustomMessage("resetBox2", "design2_box")
+    session$sendCustomMessage("resetBox3", "char_box")
+  })
+  
   # Prepare inputs
   conduct_inputs <- tidy_inputs_conduct(input)
   
-  observeEvent(input$predict_conduct, {
-    req(conduct_inputs())
-    print(conduct_inputs(), n = 100)
+  # Get pre-CITL Gompertz parameters
+  conduct_pre <- conduct_design_params(conduct_inputs)
+  
+  # CITL and risk estimates
+  conduct_citl <- predict_conduct(conduct_pre, conduct_inputs)
+  
+  # Render plots
+  output$plot_risk_conduct <- renderPlot({
+    req(conduct_plots_visible())
+    conduct_risk_plot(
+      conduct_df = conduct_citl(), 
+      top5_df   = top5(), 
+      show_top5 = isTRUE(input$overlay_top5)
+    )
+  })
+  
+  # Render summary table
+  output$sum_conduct <- DT::renderDT({
+    req(conduct_sum_visible())
+    conduct_sum(conduct_citl())$dt
   })
   
   # User guide -----------------------------------------------------------------

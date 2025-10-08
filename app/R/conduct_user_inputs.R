@@ -143,7 +143,7 @@ tidy_inputs_conduct <- function(input) {
           name == "race" & value == "Black/African American*" ~ "black_aa",
           name == "race" & value == "Asian*" ~ "asian",
           name == "race" & value == "Other" ~ "other"
-        )
+        ),
       ) %>%
       filter(!is.na(value_prep))
   })

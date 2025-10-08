@@ -10,9 +10,13 @@ dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       id = "tabs", selected = "guide",
-      # User guide menu
+      
+      # User guide menu --------------------------------------------------------
+      
       menuItem("User guide", tabName = "guide", icon = icon("book")),
-      # Design menu
+      
+      # Design menu ------------------------------------------------------------
+      
       menuItem(
         "Trial design", tabName = "predict_design", icon = icon("bolt"),
         # Go to page
@@ -37,6 +41,7 @@ dashboardPage(
             "save_select", "Select outputs to save",
             c("Risk plot", "Instantaneous hazard plot", "Summary statistics")
           ),
+          # Button to initiate save outputs
           actionButton(
             "savebtn", "Save outputs", class = "btn-success",
             disabled = TRUE
@@ -44,7 +49,8 @@ dashboardPage(
         )
       ),
       
-      # Conduct menu
+      # Conduct menu -----------------------------------------------------------
+      
       menuItem(
         "Trial conduct", tabName = "predict_conduct", icon = icon("bolt"),
         menuSubItem("Go to page", "predict_conduct", icon = icon("square-caret-right")),
@@ -53,8 +59,8 @@ dashboardPage(
           condition = "input.overlay_top5_2",
           div(
             style = "margin:8px 0 12px 8px; padding:8px; border-left:3px solid #3c8dbc;",
-            strong("Similar trials (NCT IDs)"),
-            tags$div(style = "font-size: 12px; margin-top:6px;", uiOutput("conduct-top5_ids"))
+            strong("Similar trials (NCT IDs) - risk"),
+            tags$div(style = "font-size: 15px; margin-top:6px;", uiOutput("conduct-top5_ids"))
           )
         ),
         checkboxInput("save_outputs2", "Save outputs?", FALSE),
@@ -76,14 +82,12 @@ dashboardPage(
     )
   ),
   dashboardBody(
-    
     # Use shinyjs
     useShinyjs(),
     
     # Javascript placeholders (greyed-out text in input boxes)
     tags$head(
-      tags$script(src = "style/input_mods_design.js"),
-      tags$script(src = "style/input_mods_conduct.js")
+      tags$script(src = "style/input_mods.js")
     ),
     
     tabItems(
@@ -114,7 +118,7 @@ dashboardPage(
                 ),
                 numericInput(
                   "design-arms", "Number of arms",
-                  value = NA, min = 2, max = 6,
+                  value = 2, min = 2, max = 6,
                   width = "170px"
                 ),
                 radioButtons(
@@ -211,7 +215,7 @@ dashboardPage(
                 ),
                 actionButton(
                   "reset_design", "Enter duration", 
-                  class = "btn-warning",
+                  class = "btn-danger",
                   disabled = TRUE,
                   width = "160px",
                   style = "font-weight: bold; color:white; font-size:125%%"
@@ -266,30 +270,24 @@ dashboardPage(
                 width = 3,
                 numericInput(
                   "conduct-duration", "Duration (weeks)",
-                  value = NA, min = 12, max = 52,
-                  width = "170px"
-                ),
-                numericInput(
-                  "conduct-sample", "Sample size",
-                  value = NA, min = 30, max = 1000,
-                  width = "170px"
-                ),
-                numericInput(
-                  "conduct-facilities", "Number of sites",
-                  value = NA, min = 1, max = 500,
+                  value = NA, min = 12, max = 520,
                   width = "170px"
                 ),
                 numericInput(
                   "conduct-arms", "Number of arms",
-                  value = NA, min = 2, max = 6,
+                  value = 2, min = 2, max = 6,
                   width = "170px"
                 ),
-                actionButton(
-                  "reset_design2", "Enter duration", 
-                  class = "btn-warning",
-                  disabled = TRUE,
-                  width = "160px",
-                  style = "font-weight: bold; color:white; font-size:125%%"
+                radioButtons(
+                  "conduct-sample_size", "Sample size",
+                  c("Small (<500)", "Medium (500 - 999)", "Large (>=1000)"),
+                  inline = FALSE,
+                  selected = "Small (<500)"
+                ),
+                numericInput(
+                  "conduct-est_sample", "Estimated sample size",
+                  value = NA,
+                  width = "170px"
                 )
               ),
               column(
@@ -318,10 +316,11 @@ dashboardPage(
                   inline = TRUE,
                   selected = "3"
                 ),
-                checkboxGroupInput(
-                  "conduct-trttype", "Comparators",
-                  c("Placebo", "Active comparator"),
-                  selected = "Placebo"
+                radioButtons(
+                  "conduct-n_facilities", "Number of sites",
+                  c("<50", "50 - 99", ">=100"),
+                  inline = FALSE,
+                  selected = ""
                 )
               ),
               column(
@@ -349,6 +348,11 @@ dashboardPage(
                   c("1", ">1"),
                   inline = TRUE,
                   selected = "1"
+                ),
+                checkboxGroupInput(
+                  "conduct-trttype", "Comparators",
+                  c("Placebo", "Active comparator"),
+                  selected = "Placebo"
                 )
               ),
               column(
@@ -382,24 +386,23 @@ dashboardPage(
                   value = NA, min = 18, max = 100,
                   width = "170px"
                 ),
-                numericInput(
-                  "conduct-t2dur", "T2DM duration (years)*",
-                  value = NA, min = 0.01, max = 50,
-                  width = "170px"
+                radioButtons(
+                  "conduct-race", "Race",
+                  c("Asian*", "Black/African American*", "White", "Other"),
+                  selected = "White"
                 ),
-                numericInput(
-                  "conduct-hba1c", "HbA1c (%)*",
-                  value = NA, min = 6, max = 9,
-                  width = "170px"
-                ),
-                numericInput(
-                  "conduct-hdl", "HDL cholesterol (mmol/L)",
-                  value = NA, min = 1, max = 4,
-                  width = "170px"
-                ),
+                div(style = "height: 15px;"),
                 actionButton(
                   "reset_char", "Enter duration", 
                   class = "btn-warning",
+                  disabled = TRUE,
+                  width = "160px",
+                  style = "font-weight: bold; color:white; font-size:125%%"
+                ),
+                div(style = "height: 15px;"),
+                actionButton(
+                  "reset_conduct", "Enter duration", 
+                  class = "btn-danger",
                   disabled = TRUE,
                   width = "160px",
                   style = "font-weight: bold; color:white; font-size:125%%"
@@ -415,32 +418,44 @@ dashboardPage(
               ),
               column(
                 width = 3,
+                radioButtons(
+                  "conduct-sex", "Sex*",
+                  c("Female", "Male"),
+                  inline = TRUE,
+                  selected = "Female"
+                ),
+                numericInput(
+                  "conduct-t2dur", "T2DM duration (years)*",
+                  value = NA, min = 0.01, max = 50,
+                  width = "170px"
+                ),
                 numericInput(
                   "conduct-bmi", "BMI (kg/m2)",
                   value = NA, min = 19, max = 50,
                   width = "170px"
                 ),
                 numericInput(
-                  "conduct-egfr", "eGFR (mmol/min/1.73m2)*",
-                  value = NA, min = 60, max = 120,
-                  width = "170px"
-                ),
-                numericInput(
                   "conduct-sbp", "Systolic BP (mmHg)*",
                   value = NA, min = 60, max = 140,
-                  width = "170px"
-                ),
-                numericInput(
-                  "conduct-totalc", "Total cholesterol (mmol/L)",
-                  value = NA, min = 1, max = 4,
                   width = "170px"
                 )
               ),
               column(
                 width = 3,
+                radioButtons(
+                  "conduct-smoke", "Current smoker*",
+                  c("No", "Yes"),
+                  inline = TRUE,
+                  selected = "No"
+                ),
                 numericInput(
-                  "conduct-conmed", "Concomitant medications",
-                  value = NA, min = 0, max = 20,
+                  "conduct-hba1c", "HbA1c (%)*",
+                  value = NA, min = 6, max = 9,
+                  width = "170px"
+                ),
+                numericInput(
+                  "conduct-hdl", "HDL cholesterol (mmol/L)",
+                  value = NA, min = 1, max = 4,
                   width = "170px"
                 ),
                 numericInput(
@@ -452,26 +467,25 @@ dashboardPage(
               column(
                 width = 3,
                 radioButtons(
-                  "conduct-sex", "Sex",
-                  c("Female", "Male*"),
-                  inline = TRUE,
-                  selected = "Female"
-                ),
-                radioButtons(
-                  "conduct-smoke", "Current smoker",
-                  c("No", "Yes*"),
-                  inline = TRUE,
-                  selected = "No"
-                ),
-                radioButtons(
-                  "conduct-race", "Race",
-                  c("Asian*", "Black/African American*", "White", "Other"),
-                  selected = "White"
-                ),
-                radioButtons(
                   "conduct-trttype", "Treatment group",
-                  c("Placebo", "Active comparator"),
-                  selected = "Placebo"
+                  c("Placebo", "Active"),
+                  selected = "Placebo",
+                  inline = TRUE
+                ),
+                numericInput(
+                  "conduct-egfr", "eGFR (mmol/min/1.73m2)*",
+                  value = NA, min = 60, max = 120,
+                  width = "170px"
+                ),
+                numericInput(
+                  "conduct-totalc", "Total cholesterol (mmol/L)",
+                  value = NA, min = 1, max = 4,
+                  width = "170px"
+                ),
+                numericInput(
+                  "conduct-conmed", "Concomitant medications",
+                  value = NA, min = 0, max = 20,
+                  width = "170px"
                 )
               )
             )

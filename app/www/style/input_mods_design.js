@@ -1,5 +1,4 @@
 
-
 // Design placeholders
 (() => {
   // Config
@@ -7,7 +6,7 @@
     placeholders: {
       'design-duration':    '12 - 520',
       'design-facilities':  '1 - 500',
-      'design-arms':        '2 - 6',
+      'design-arms':        '2 - 6'
     }
   };
 

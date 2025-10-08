@@ -2,12 +2,9 @@
 // Conduct placeholders
 (() => {
   // Config
-  const UI_HELPERS_CONFIG = {
-    placeholders: {
-      'conduct-duration':    '12 - 52',
-      'conduct-sample':      '30 - 1000',
-      'conduct-facilities':  '1 - 500',
-      'conduct-arms':        '2 - 6',
+  const UI_HELPERS_CONFIG2 = {
+    placeholders2: {
+      'conduct-duration':    '12 - 520',
       'conduct-age':         '18 - 100',
       'conduct-bmi':         '18 - 50',
       'conduct-sbp':         '60 - 140',
@@ -32,7 +29,7 @@
   
   // Initiate application
   $(document).on('shiny:connected', function() {
-    applyPlaceholders(UI_HELPERS_CONFIG.placeholders);
+    applyPlaceholders(UI_HELPERS_CONFIG2.placeholders2);
   });
   
   // Reset user inputs upon restart button activation

@@ -84,7 +84,7 @@ function(input, output, session) {
   
   # Update default when radio changes
   observeEvent(input$`design-sample_size`, {
-    d <- sample_defaults[[ input$`design-sample_size` ]]
+    d <- sample_defaults[[input$`design-sample_size`]]
     current <- isolate(input$`design-est_sample`)
     
     # Keep the user's value if it fits, otherwise use default
@@ -134,11 +134,7 @@ function(input, output, session) {
   
   # Clear inputs when reset buttons are used
   observeEvent(input$reset_design, {
-    session$sendCustomMessage("resetBox2", "design_box")
-  })
-  
-  observeEvent(input$reset_char, {
-    session$sendCustomMessage("resetBox3", "char_box")
+    session$sendCustomMessage("resetBox", "design_box")
   })
   
   # Prepare user inputs
@@ -216,55 +212,45 @@ function(input, output, session) {
   
   # Update action buttons (disabled -> usable) based on inputs
   observe({
-    have_duration_conduct <- isTruthy(input$"conduct-duration")
-    have_sample_conduct   <- isTruthy(input$"conduct-sample")
-    have_age_conduct      <- isTruthy(input$"conduct-age")
-    
-    ready_conduct <- have_duration_conduct && have_sample_conduct && have_age_conduct
+    have_duration <- isTruthy(input$"conduct-duration")
+    have_age <- isTruthy(input$"conduct-age")
+    have_both <- have_duration & have_age
     
     # Toggle enabled/disabled
-    shinyjs::toggleState("predict_conduct", condition = ready_conduct)
-    shinyjs::toggleState("reset_design2", condition = ready_conduct)
-    shinyjs::toggleState("reset_char", condition = ready_conduct)
+    shinyjs::toggleState("predict_conduct", condition = have_both)
+    shinyjs::toggleState("reset_char", condition = have_both)
+    shinyjs::toggleState("reset_conduct", condition = have_both)
     
     # Choose labels based on what input is missing (duration, sample size)
-    missing_conduct <- c(
-      if (!have_duration_conduct) "duration",
-      if (!have_sample_conduct) "sample size",
-      if (!have_age_conduct) "age"
-    )
-    
-    lab_needed_conduct <- if ("duration" %in% missing_conduct) {
-      paste("Enter duration")
-    } else if ("sample size" %in% missing_conduct) {
-      paste("Enter sample size")
+    lab_needed <- if (!have_duration) {
+      "Enter duration"
+    } else if (!have_age) {
+      "Enter age"
     } else {
-      paste("Enter age")
+      "Predict risk"
     }
     
     # Predict button
     updateActionButton(
       session, "predict_conduct",
-      label = if (ready_conduct) "Predict risk" else lab_needed_conduct
+      label = if (have_both) "Predict risk" else lab_needed
     )
     
-    # Reset buttons
-    updateActionButton(
-      session, "reset_design2",
-      label = if (ready_conduct) "Reset design features" else lab_needed_conduct
-    )
-    
+    # Reset button
     updateActionButton(
       session, "reset_char",
-      label = if (ready_conduct) "Reset characteristics" else lab_needed_conduct
+      label = if (have_both) "Reset characteristics" else lab_needed
+    )
+    
+    updateActionButton(
+      session, "reset_conduct",
+      label = if (have_both) "Reset everything" else lab_needed
     )
   })
   
   # Force minimum/maximum values for numeric inputs where violated
   conduct_value_limits <- list(
     "conduct-duration"   = c(12, 520),
-    "conduct-sample"     = c(30, 1000),
-    "conduct-facilities" = c(1, 500),
     "conduct-arms"       = c(2, 6),
     "conduct-age"        = c(18, 100),
     "conduct-t2dur"      = c(0.01, 50),
@@ -294,11 +280,55 @@ function(input, output, session) {
     })
   })
   
+  # Apply defaults upon app loading with reference set (small)
+  observe({
+    req(isTruthy(input$`conduct-sample_size`))
+    d <- sample_defaults[[input$`conduct-sample_size`]]
+    updateNumericInput(
+      session, "conduct-est_sample",
+      value = d$value, min = d$min, max = d$max
+    )
+  })
+  
+  # Update default when radio changes
+  observeEvent(input$`conduct-sample_size`, {
+    d <- sample_defaults[[ input$`conduct-sample_size` ]]
+    current <- isolate(input$`conduct-est_sample`)
+    
+    # Keep the user's value if it fits, otherwise use default
+    new_value <- if (!is.null(current) && !is.na(current) &&
+                     current >= d$min && current <= d$max) current else d$value
+    
+    updateNumericInput(
+      session, "conduct-est_sample",
+      value = new_value, min = d$min, max = d$max
+    )
+  })
+  
+  # Clamp user entries to bounds for each radio button
+  observeEvent(input$`conduct-est_sample`, {
+    d <- sample_defaults[[ input$`conduct-sample_size` ]]
+    val <- input$`conduct-est_sample`
+    
+    # If box is cleared, reset to default for radio button
+    if (is.null(val) || is.na(val) || val == "") {
+      updateNumericInput(session, "conduct-est_sample", value = d$value)
+      return()
+    }
+    
+    # Otherwise clamp to boundaries
+    clamped <- max(d$min, min(d$max, val))
+    if (!identical(val, clamped)) {
+      updateNumericInput(session, "conduct-est_sample", value = clamped)
+    }
+  })
+  
   # Predict conduct ------------------------------------------------------------
   
   # Clear inputs when reset buttons are used
-  observeEvent(input$reset_design2, {
+  observeEvent(input$reset_char, {
     session$sendCustomMessage("resetBox2", "design2_box")
+    session$sendCustomMessage("resetBox3", "char_box")
   })
   
   # Prepare inputs

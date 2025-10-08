@@ -87,7 +87,7 @@ tidy_inputs <- function(input) {
           name == "blinding" & value == "Open label"  ~ "0",
           name == "blinding" & !is.na(value) & value != "Open label" ~ "1",
           # WHO regions as factor
-          name == "who_reg" & !is.na(value) ~ "1",
+          name == "who_reg" & (!is.na(value) | value == "") ~ "0",
           TRUE ~ value
         )
       )
@@ -114,7 +114,5 @@ tidy_inputs <- function(input) {
         )
       ) %>%
       filter(!is.na(value_prep))
-    
-    print(input_param)
   })
 }

@@ -12,7 +12,7 @@ predict_top5 <- function(design_inputs, input_flag) {
     
     # Define columns to check
     core_prefixes <- c("^reg_am$", "^blinding", "^trttype", "^phase", "age_upper")
-    core_fixed    <- c("duration")
+    core_fixed    <- c("duration", "n_arms")
     X <- imp_df$X
     avail <- colnames(X)
     
@@ -53,10 +53,10 @@ predict_top5 <- function(design_inputs, input_flag) {
     names(wts) <- colnames(X_all)[-1]
     
     # Upweight core design features
-    bump_list <- c(duration = 1.5, age_upper = 1.2)
+    bump_list <- c(duration = 1.5, n_arms = 1.2, age_upper = 1.5)
     for (nm in names(bump_list)) if (nm %in% names(wts)) wts[nm] <- bump_list[[nm]]
-    wts[grepl("^phase", names(wts))]    <- wts[grepl("^phase", names(wts))] * 1.3
-    wts[grepl("^blinding", names(wts))] <- wts[grepl("^blinding", names(wts))] * 1.2
+    wts[grepl("^phase", names(wts))]    <- wts[grepl("^phase", names(wts))] * 1.5
+    wts[grepl("^blinding", names(wts))] <- wts[grepl("^blinding", names(wts))] * 1.5
     
     # Treat reg_am asymmetrically (i.e. presence matters)
     type_list <- list(asymm = which(grepl("^reg_am$", names(wts))))

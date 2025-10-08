@@ -332,10 +332,12 @@ function(input, output, session) {
   })
   
   # Prepare inputs
-  conduct_inputs <- eventReactive(input$predict_conduct, {
-    bind_rows(tidy_design_inputs(input), tidy_char_inputs(input))
+  conduct_inputs <- tidy_inputs_conduct(input)
+  
+  observeEvent(input$predict_conduct, {
+    req(conduct_inputs())
+    print(conduct_inputs(), n = 100)
   })
-  print(conduct_inputs)
   
   # User guide -----------------------------------------------------------------
   

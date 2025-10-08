@@ -466,12 +466,7 @@ dashboardPage(
               ),
               column(
                 width = 3,
-                radioButtons(
-                  "conduct-trttype", "Treatment group",
-                  c("Placebo", "Active"),
-                  selected = "Placebo",
-                  inline = TRUE
-                ),
+                div(style = "height: 61px;"),
                 numericInput(
                   "conduct-egfr", "eGFR (mmol/min/1.73m2)*",
                   value = NA, min = 60, max = 120,

@@ -12,7 +12,7 @@ tidy_inputs <- function(input) {
       duration     = input$"design-duration",
       n_arms       = input$"design-arms",
       est_sample   = input$"design-est_sample",
-      sample       = input$"design-sample",
+      sample       = input$"design-sample_size",
       n_facilities = input$"design-n_facilities",
       age_lower    = input$"design-age_lower",
       age_upper    = input$"design-age_upper",
@@ -54,10 +54,10 @@ tidy_inputs <- function(input) {
           name == "n_facilities" & value == "50 - 99" ~ "1",
           name == "n_facilities" & value == ">=100" ~ "2",
           # Number of arms - ordinal
-          name == "n_arms" & value == "2" ~ "1",
-          name == "n_arms" & value == "3" ~ "2",
-          name == "n_arms" & value == "4" ~ "3",
-          name == "n_arms" & !value %in% c("2", "3", "4") & !is.na(value) ~ "4",
+          name == "n_arms" & value == "2" ~ "0",
+          name == "n_arms" & value == "3" ~ "1",
+          name == "n_arms" & value == "4" ~ "2",
+          name == "n_arms" & !value %in% c("2", "3", "4") & !is.na(value) ~ "3",
           # Treatment type - ordinal
           name == "trttype" & value == "Placebo"  ~ "0",
           name == "trttype" & value == "Active comparator" ~ "1",

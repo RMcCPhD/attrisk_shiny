@@ -12,12 +12,14 @@ dashboardPage(
       id = "tabs", selected = "guide",
       # User guide menu
       menuItem("User guide", tabName = "guide", icon = icon("book")),
-      
       # Design menu
       menuItem(
         "Trial design", tabName = "predict_design", icon = icon("bolt"),
+        # Go to page
         menuSubItem("Go to page", "predict_design", icon = icon("square-caret-right")),
+        # User input: Show 5 trials from model set most similar to their trial
         checkboxInput("overlay_top5", "Show risk for 5 similar trials?", FALSE),
+        # Conditional inputs that appear if checkbox selected
         conditionalPanel(
           condition = "input.overlay_top5",
           div(
@@ -26,7 +28,9 @@ dashboardPage(
             tags$div(style = "font-size: 15px; margin-top:6px;", uiOutput("top5_ids"))
           )
         ),
+        # User input: Save outputs (plots and/or summary)
         checkboxInput("save_outputs", "Save outputs?", FALSE),
+        # Conditional inputs to select outputs to save
         conditionalPanel(
           condition = "input.save_outputs",
           checkboxGroupInput(
@@ -201,7 +205,7 @@ dashboardPage(
                   "design-who_reg", "WHO regions involved",
                   c(
                     "African", "The Americas*",
-                    "Eastern Mediterranean", "European*",
+                    "Eastern Mediterranean", "European",
                     "SE Asian", "Western Pacific"
                   )
                 ),
@@ -358,7 +362,7 @@ dashboardPage(
                   "conduct-who_reg", "WHO regions involved",
                   c(
                     "African", "The Americas*",
-                    "Eastern Mediterranean", "European*",
+                    "Eastern Mediterranean", "European",
                     "SE Asian", "Western Pacific"
                   )
                 )

@@ -8,12 +8,6 @@ library(DT)
 # Define server logic
 function(input, output, session) {
   
-  # Sourced scripts for server functionality
-  source("R/design_user_inputs.R")  # Prepare inputs, join betas
-  source("R/design_predict.R")      # Gompertz predictions
-  source("R/conduct_user_inputs.R")
-  source("R/conduct_predict.R")
-  
   # Design page conditions -----------------------------------------------------
   
   # Update action buttons (disabled -> usable) based on inputs
@@ -40,7 +34,7 @@ function(input, output, session) {
     # Reset button
     updateActionButton(
       session, "reset_design",
-      label = if (have_duration) "Reset design features" else lab_needed
+      label = if (have_duration) "Reset everything" else lab_needed
     )
   })
   
@@ -92,6 +86,7 @@ function(input, output, session) {
   observeEvent(input$`design-sample_size`, {
     d <- sample_defaults[[ input$`design-sample_size` ]]
     current <- isolate(input$`design-est_sample`)
+    
     # Keep the user's value if it fits, otherwise use default
     new_value <- if (!is.null(current) && !is.na(current) &&
                      current >= d$min && current <= d$max) current else d$value
@@ -120,6 +115,21 @@ function(input, output, session) {
     }
   })
   
+  # Conditions to remove outputs when reset button is pressed
+  plots_visible <- reactiveVal(FALSE)
+  sum_visible <- reactiveVal(FALSE)
+  
+  observeEvent(input$predict_design, {
+    plots_visible(TRUE)
+    sum_visible(TRUE)
+  })
+  
+  observeEvent(input$reset_design, {
+    plots_visible(FALSE)
+    sum_visible(FALSE)
+    updateCheckboxInput(session, "overlay_top5", value = FALSE)
+  })
+  
   # Predict design -------------------------------------------------------------
   
   # Clear inputs when reset buttons are used
@@ -143,11 +153,11 @@ function(input, output, session) {
   # Print ctgov for 5 most similar trials in sidebar (if selected)
   output$top5_ids <- renderUI({
     req(input$overlay_top5)
-    d5 <- bind_rows(top5())
+    d5 <- top5()
     req(!is.null(d5), nrow(d5) > 0)
     
     # Get the 5 unique trial IDs in the order they were selected
-    ids <- d5 %>% distinct(trial_id) %>% pull(trial_id)
+    ids <- d5 %>% pull(trial_id)
     
     # Build a neat ordered list of links to ClinicalTrials.gov
     tags$ol(
@@ -162,278 +172,38 @@ function(input, output, session) {
       })
     )
   })
-
+  
   # Render plots
   output$plot_risk_design <- renderPlot({
-    p <- design_predict() %>%
-      mutate(
-        across(contains("risk_"), ~ round(. * 100, 2))
-      ) %>% 
-      ggplot(aes(x = t_wks, y = risk_q50, ymin = risk_q025, ymax = risk_q975)) +
-      geom_line() +
-      geom_ribbon(
-        alpha = 0.2,
-        fill = "steelblue",
-        colour = "black",
-        linetype = "dashed"
-      ) +
-      labs(x = "Follow-up time (weeks)", y = "Attrition risk (%)") +
-      scale_x_continuous(n.breaks = 6) +
-      scale_y_continuous(n.breaks = 6) +
-      theme_classic() +
-      theme(
-        axis.text = element_text(size = 15),
-        axis.title = element_text(size = 20, face = "bold")
-      )
-    
-    if (isTRUE(input$overlay_top5)) {
-      get_top5 <- top5()
-      top5_df <- bind_rows(get_top5) %>% 
-        mutate(across(contains("risk_"), ~ round(. * 100, 2)))
-
-      p <- p + 
-        geom_line(
-          data = top5_df, 
-          aes(x = t_wks, y = risk_q50, group = trial_id),
-          colour = "salmon"
-        )
-    }
-    p
+    req(plots_visible())
+    design_risk_plot(
+      design_df = design_predict(), 
+      top5_df   = top5(), 
+      show_top5 = isTRUE(input$overlay_top5)
+    )
   })
   
   output$plot_hazard_design <- renderPlot({
-    design_predict() %>%
-      ggplot(aes(x = t_wks, y = hazard_q50)) +
-      geom_line() +
-      labs(x = "Follow-up time (weeks)", y = "Instantaneous hazard") +
-      scale_x_continuous(n.breaks = 6) +
-      scale_y_continuous(n.breaks = 6) +
-      theme_classic() +
-      theme(
-        axis.text = element_text(size = 15),
-        axis.title = element_text(size = 20, face = "bold")
-      )
+    req(plots_visible())
+    design_haz_plot(design_predict())
   })
   
-  # Render summary table (nothing renders using renderDT, only renderTable)
+  # Render summary table
   output$sum_design <- DT::renderDT({
-    df <- design_predict() %>%
-      select(t_wks, compl_q50, drp_q50, contains(c("surv", "risk"))) %>% 
-      mutate(
-        across(c(t_wks, compl_q50, drp_q50, starts_with("at_risk")), ~ round(.)),
-        across(starts_with("risk"), ~ round(. * 100, 2)),
-        across(c(t_wks, compl_q50, drp_q50), ~ as.integer(.))
-      ) %>% 
-      select(t_wks, compl_q50, drp_q50, risk_q50) %>%
-      rename(
-        "Follow-up time (weeks)" = t_wks,
-        "Participants at risk" = compl_q50,
-        "Non-completers" = drp_q50,
-        "Attrition risk (%)" = risk_q50,
-      )
-    
-    DT::datatable(
-      df,
-      rownames = FALSE,
-      class = "compact stripe hover cell-border",
-      lazyRender = TRUE,
-      options = list(
-        scrollY = 320,
-        scrollX = FALSE,
-        scrollCollapse = TRUE,
-        paging = FALSE,
-        searching = FALSE,
-        fixedHeader = TRUE,
-        autoWidth = TRUE,
-        columnDefs = list(
-          list(className = "dt-head-center dt-body-center", targets = "_all")
-        )
-      )
-    )
+    req(sum_visible())
+    design_sum(design_predict())$dt
   })
   
-  # Save design outputs --------------------------------------------------------
-  
-  # Create outputs downloadable by user
-  observe({
-    shinyjs::toggleState(
-      "savebtn",
-      condition = isTRUE(input$save_outputs) && length(input$save_select) > 0
-    )
-  })
-  
-  # Helpers for generating plots to save
-  make_risk_plot <- function(user_df, top5_df = NULL, overlay = FALSE) {
-    ggplot(user_df, aes(x = t_wks, y = risk_q50, ymin = risk_q025, ymax = risk_q975)) +
-      geom_line() +
-      geom_ribbon(alpha = 0.2, fill = "steelblue", colour = "black", linetype = "dashed") +
-      labs(x = "Follow-up time (weeks)", y = "Attrition risk (%)") +
-      scale_x_continuous(n.breaks = 6) +
-      scale_y_continuous(n.breaks = 6) +
-      theme_classic() +
-      theme(axis.text = element_text(size = 15),
-            axis.title = element_text(size = 20, face = "bold")) +
-      # Add in median risk for 5 similar trials if selected by user
-      { if (overlay && !is.null(top5_df) && nrow(top5_df))
-        geom_line(data = top5_df, aes(y = risk_q50, group = trial_id), colour = "salmon")
-        else NULL }
-  }
-  
-  make_hazard_plot <- function(user_df, top5_df = NULL, overlay = FALSE) {
-    ggplot(user_df, aes(x = t_wks, y = hazard_q50)) +
-      geom_line() +
-      labs(x = "Follow-up time (weeks)", y = "Instantaneous hazard") +
-      scale_x_continuous(n.breaks = 6) +
-      scale_y_continuous(n.breaks = 6) +
-      theme_classic() +
-      theme(axis.text = element_text(size = 15),
-            axis.title = element_text(size = 20, face = "bold")) +
-      { if (overlay && !is.null(top5_df) && nrow(top5_df))
-        geom_line(data = top5_df, aes(y = hazard_q50, group = trial_id), colour = "salmon")
-        else NULL }
-  }
-  
-  # Paths NULL by default
-  lastSaveDir <- reactiveVal(NULL)
-  lastZipPath <- reactiveVal(NULL)
-  savedStamp  <- reactiveVal(NULL)
-  
-  zip_dir <- function(dir_path) {
-    zip_path <- tempfile(fileext = ".zip")
-    dir_path <- normalizePath(dir_path, winslash = "/", mustWork = TRUE)
-    files_to_zip <- list.files(dir_path, recursive = TRUE, full.names = TRUE)
-    
-    if (requireNamespace("zip", quietly = TRUE)) {
-      owd <- getwd()
-      on.exit(setwd(owd), add = TRUE)
-      setwd(dirname(dir_path))
-      zip::zipr(zipfile = zip_path, files = basename(dir_path))
-    } else {
-      owd <- getwd(); on.exit(setwd(owd), add = TRUE)
-      setwd(dirname(dir_path))
-      utils::zip(zipfile = zip_path, files = basename(dir_path))
-    }
-    zip_path
-  }
-  
-  output$download_saved <- downloadHandler(
-    filename = function() {
-      paste0("attrisk_outputs_", savedStamp() %||% "bundle", ".zip")
-    },
-    content = function(file) {
-      zp <- lastZipPath()
-      sd <- lastSaveDir()
-      req(!is.null(zp), file.exists(zp))
-      
-      # Stream the prepared zip to the browser temp path file
-      ok <- file.copy(zp, file, overwrite = TRUE)
-      
-      # Clean up artifacts server-side
-      if (isTRUE(ok)) {
-        # Remove the zipped folder and timestamped folders after download
-        try(unlink(zp), silent = TRUE)
-        if (!is.null(sd) && dir.exists(sd)) {
-          try(unlink(sd, recursive = TRUE, force = TRUE), silent = TRUE)
-        }
-        # Clear directory if left empty
-        parent <- dirname(sd %||% "")
-        if (!is.null(parent) && nzchar(parent) &&
-            dir.exists(parent) && length(list.files(parent)) == 0) {
-          try(unlink(parent, recursive = FALSE, force = TRUE), silent = TRUE)
-        }
-        
-        # Clear paths to prevent redownload after another click
-        lastZipPath(NULL)
-        lastSaveDir(NULL)
-        savedStamp(NULL)
-      }
-    },
-    contentType = "application/zip"
+  # Save outputs user has selected
+  init_save_outputs(
+    input, output, session,
+    design_predict  = design_predict,
+    top5            = top5,
+    risk_plot_fun   = design_risk_plot,
+    hazard_plot_fun = design_haz_plot,
+    sum_fun         = design_sum,
+    overlay_flag    = reactive(isTRUE(input$overlay_top5))
   )
-  
-  observeEvent(input$savebtn, {
-    req(isTRUE(input$save_outputs))
-    req(length(input$save_select) > 0)
-    
-    u <- design_predict()
-    req(!is.null(u), nrow(u) > 0)
-    
-    overlay_flag <- isTRUE(input$overlay_top5)
-    d5 <- NULL
-    if (overlay_flag) {
-      d5 <- tryCatch(bind_rows(top5()), error = function(e) NULL)
-      if (!is.null(d5) && nrow(d5) > 0) d5 <- arrange(d5, trial_id, t_wks)
-    }
-    
-    # Create a timestamped folder
-    stamp   <- format(Sys.time(), "%Y%m%d-%H%M%S")
-    savedStamp(stamp)
-    baseDir <- "saved_outputs"
-    saveDir <- file.path(baseDir, stamp)
-    dir.create(saveDir, recursive = TRUE, showWarnings = FALSE)
-    lastSaveDir(saveDir)
-    
-    # Prepare outputs (plots and summary tables, conditional on checkbox)
-    withProgress(message = "Generating outputs…", value = 0, {
-      if ("Risk plot" %in% input$save_select) {
-        incProgress(0.33, detail = "Risk plot")
-        u_plot <- u %>% mutate(across(contains("risk_"), ~ round(. * 100, 2)))
-        d5_plot <- if (!is.null(d5)) d5 %>% mutate(across(contains("risk_"), ~ round(. * 100, 2))) else NULL
-        rp <- make_risk_plot(u_plot, d5_plot, overlay = overlay_flag)
-        ggsave(filename = file.path(saveDir, "risk_plot.png"), plot = rp, width = 8, height = 5, dpi = 300)
-      }
-
-      if ("Instantaneous hazard plot" %in% input$save_select) {
-        incProgress(0.33, detail = "Hazard plot")
-        hp <- make_hazard_plot(u, d5)
-        ggsave(filename = file.path(saveDir, "hazard_plot.png"), plot = hp, width = 8, height = 5, dpi = 300)
-      }
-      
-      if ("Summary statistics" %in% input$save_select) {
-        incProgress(0.34, detail = "Summary statistics")
-        df <- u %>%
-          select(t_wks, drp_q50, contains(c("surv", "risk", "cdrop")), starts_with("at_risk")) %>%
-          mutate(
-            across(starts_with("at_risk"), round),
-            across(starts_with("risk"), ~ round(. * 100, 2)),
-            across(c(contains("surv"), contains("cdrop")), ~ round(., 2)),
-            drp_q50 = as.integer(round(drp_q50)),
-            t_wks   = as.integer(round(t_wks))
-          ) %>%
-          select(t_wks, at_risk_q50, drp_q50, risk_q50) %>% 
-          rename(
-            "Follow-up time (weeks)" = t_wks,
-            "Participants at risk" = at_risk_q50,
-            "Non-completers" = drp_q50,
-            "Attrition risk (%)" = risk_q50,
-          )
-        readr::write_csv(df, file.path(saveDir, "summary_statistics.csv"))
-      }
-    })
-    
-    # Zip folder of outputs and save filepath
-    message("Saved files: ", paste(list.files(saveDir), collapse = ", "))
-    zip_path <- zip_dir(saveDir)
-    lastZipPath(zip_path)
-    
-    # Modal: Show user download is ready (with button to download)
-    file_list <- list.files(saveDir)
-    showModal(
-      modalDialog(
-        title = "Your outputs are ready",
-        tagList(
-          p("Click the button below to download the files."),
-          tags$strong("Included files:"),
-          tags$ul(lapply(file_list, tags$li)),
-          div(style = "margin-top: 12px;",
-              downloadButton("download_saved", "Download zip")
-          )
-        ),
-        easyClose = TRUE,
-        footer = tagList(modalButton("Close"))
-      )
-    )
-  })
   
   # Conduct page conditions ----------------------------------------------------
   

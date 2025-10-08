@@ -3,4 +3,5 @@
 .RData
 .Ruserdata
 app/www/data
+app/www/saved_outputs
 test/

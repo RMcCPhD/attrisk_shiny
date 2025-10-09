@@ -178,7 +178,7 @@ function(input, output, session) {
   
   # Render plots
   output$plot_risk_design <- renderPlot({
-    req(plots_visible())
+    req(design_plots_visible())
     design_risk_plot(
       design_df = design_predict(), 
       top5_df   = top5(), 

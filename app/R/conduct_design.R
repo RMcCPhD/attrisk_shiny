@@ -134,6 +134,6 @@ conduct_design_params <- function(conduct_inputs) {
     drp_q50_end <- last(drp_q50)
     
     # Get outputs for CITL
-    outputs <- list(rate = rate, shape = shape, drp = drp_q50_end)
+    outputs <- list(log_rate = log_rate, shape = shape, drp = drp_q50_end)
   })
 }

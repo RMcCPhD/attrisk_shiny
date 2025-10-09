@@ -34,6 +34,7 @@ predict_conduct <- function(tidy_inputs_conduct, conduct_inputs) {
     input_dur <- as.numeric(input_dur)
     
     # Build new log-rate and rate per draw
+    log_rate <- tidy_out$log_rate                    # Log-rate (uncalibrated)
     log_rate_citl <- log_rate + delta_med + lp       # Log-rate (calibrated)
     rate_citl <- exp(log_rate_citl)                  # Rate (calibrated)
     shape <- tidy_out$shape                          # Shape (unchanged)

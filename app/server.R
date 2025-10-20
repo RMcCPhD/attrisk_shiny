@@ -8,6 +8,25 @@ library(DT)
 # Define server logic
 function(input, output, session) {
   
+  # Disclaimer -----------------------------------------------------------------
+  
+  # Load disclaimer text
+  disclaimer_text <- readLines("www/text/disclaimer.txt") %>% paste(collapse = "<br>")
+  
+  # Show disclaimer, app loads once user acknowledges
+  observeEvent(TRUE, {
+    shinyalert(
+      title = "Disclaimer",
+      type  = "warning",
+      closeOnClickOutside = FALSE,
+      showCancelButton = FALSE,
+      confirmButtonText = "I understand",
+      size = "m",
+      text = HTML(disclaimer_text),
+      html = TRUE
+    )
+  }, once = TRUE)
+  
   # Design page conditions -----------------------------------------------------
   
   # Update action buttons (disabled -> usable) based on inputs

@@ -1,7 +1,9 @@
 
 library(shiny)
 library(shinydashboard)
+library(shinycssloaders)
 library(shinyjs)
+library(shinyalert)
 library(tidyverse)
 
 # Define dashboard layout
@@ -73,6 +75,7 @@ dashboardPage(
     )
   ),
   dashboardBody(
+    
     # Use shinyjs
     useShinyjs(),
     
@@ -96,21 +99,22 @@ dashboardPage(
         tabName = "predict_design",
         fluidRow(
           box(
-            height = 462,
+            # height = 462,
             title = tags$b("Trial design features"),
             div(
               id = "design_box",
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 numericInput(
                   "design-duration", "Duration (weeks)",
                   value = NA, min = 12, max = 520,
-                  width = "170px"
+                  # # width = "170px"
                 ),
                 numericInput(
                   "design-arms", "Number of arms",
                   value = 2, min = 2, max = 6,
-                  width = "170px"
+                  # # width = "170px"
                 ),
                 radioButtons(
                   "design-sample_size", "Sample size",
@@ -121,11 +125,12 @@ dashboardPage(
                 numericInput(
                   "design-est_sample", "Estimated sample size",
                   value = NA,
-                  width = "170px"
+                  # # width = "170px"
                 )
               ),
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 radioButtons(
                   "design-age_lower", "Lower age limits",
                   c("18yr", ">18yr"),
@@ -159,6 +164,7 @@ dashboardPage(
               ),
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 radioButtons(
                   "design-age_upper", "Upper age limits*",
                   c("70yr", ">70yr"),
@@ -191,6 +197,7 @@ dashboardPage(
               ),
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 radioButtons(
                   "design-blind", "Blinding type",
                   c("Open label", "Double", "Triple", "Quadruple"),
@@ -226,7 +233,7 @@ dashboardPage(
             title = tags$b("Attrition risk over time"),
             width = 6,
             height = 462,
-            plotOutput("plot_risk_design")
+            withSpinner(plotOutput("plot_risk_design"), type = 6, color = "#3c8dbc")
           )
         ),
         fluidRow(
@@ -235,13 +242,16 @@ dashboardPage(
             title = tags$b("Summary statistics"),
             width = 6,
             height = 462,
-            div(style = "height: 380px;", DT::DTOutput("sum_design"))
+            div(
+              style = "height: 380px;", 
+              withSpinner(DT::DTOutput("sum_design"), type = 6, color = "#3c8dbc")
+            )
           ),
           box(
             title = tags$b("Instantaneous attrition hazard (at each timepoint)"),
             width = 6,
             height = 462,
-            plotOutput("plot_hazard_design")
+            withSpinner(plotOutput("plot_hazard_design"), type = 6, color = "#3c8dbc")
           )
         )
       ),
@@ -253,21 +263,22 @@ dashboardPage(
         fluidRow(
           # Trial design features
           box(
-            height = 462,
+            # height = 462,
             title = tags$b("Trial design features"),
             div(
               id = "design2_box",
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 numericInput(
                   "conduct-duration", "Duration (weeks)",
                   value = NA, min = 12, max = 520,
-                  width = "170px"
+                  # width = "170px"
                 ),
                 numericInput(
                   "conduct-arms", "Number of arms",
                   value = 2, min = 2, max = 6,
-                  width = "170px"
+                  # width = "170px"
                 ),
                 radioButtons(
                   "conduct-sample_size", "Sample size",
@@ -278,11 +289,12 @@ dashboardPage(
                 numericInput(
                   "conduct-est_sample", "Estimated sample size",
                   value = NA,
-                  width = "170px"
+                  # width = "170px"
                 )
               ),
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 radioButtons(
                   "conduct-age_lower", "Lower age limits",
                   c("18yr", ">18yr"),
@@ -316,6 +328,7 @@ dashboardPage(
               ),
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 radioButtons(
                   "conduct-age_upper", "Upper age limits*",
                   c("70yr", ">70yr"),
@@ -348,6 +361,7 @@ dashboardPage(
               ),
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 radioButtons(
                   "conduct-blind", "Blinding type",
                   c("Open label", "Double", "Triple", "Quadruple"),
@@ -366,16 +380,17 @@ dashboardPage(
           ),
           # Participant baseline characteristics
           box(
-            height = 462,
+            # height = 462,
             title = tags$b("Participant baseline characteristics"),
             div(
               id = "char_box",
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 numericInput(
                   "conduct-age", "Age (years)*",
                   value = NA, min = 18, max = 100,
-                  width = "170px"
+                  # width = "170px"
                 ),
                 radioButtons(
                   "conduct-race", "Race",
@@ -409,6 +424,7 @@ dashboardPage(
               ),
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 radioButtons(
                   "conduct-sex", "Sex*",
                   c("Female", "Male"),
@@ -418,21 +434,22 @@ dashboardPage(
                 numericInput(
                   "conduct-t2dur", "T2DM duration (years)*",
                   value = NA, min = 0.01, max = 50,
-                  width = "170px"
+                  # width = "170px"
                 ),
                 numericInput(
                   "conduct-bmi", "BMI (kg/m2)",
                   value = NA, min = 19, max = 50,
-                  width = "170px"
+                  # width = "170px"
                 ),
                 numericInput(
                   "conduct-sbp", "Systolic BP (mmHg)*",
                   value = NA, min = 60, max = 140,
-                  width = "170px"
+                  # width = "170px"
                 )
               ),
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 radioButtons(
                   "conduct-smoke", "Current smoker*",
                   c("No", "Yes"),
@@ -442,36 +459,37 @@ dashboardPage(
                 numericInput(
                   "conduct-hba1c", "HbA1c (%)*",
                   value = NA, min = 6, max = 9,
-                  width = "170px"
+                  # width = "170px"
                 ),
                 numericInput(
                   "conduct-hdl", "HDL cholesterol (mmol/L)",
                   value = NA, min = 1, max = 4,
-                  width = "170px"
+                  # width = "170px"
                 ),
                 numericInput(
                   "conduct-comorbs", "Comorbidities*",
                   value = NA, min = 0, max = 10,
-                  width = "170px"
+                  # width = "170px"
                 )
               ),
               column(
                 width = 3,
+                class = "col-xs-12 col-sm-6 col-lg-3",
                 div(style = "height: 61px;"),
                 numericInput(
                   "conduct-egfr", "eGFR (mmol/min/1.73m2)*",
                   value = NA, min = 60, max = 120,
-                  width = "170px"
+                  # width = "170px"
                 ),
                 numericInput(
                   "conduct-totalc", "Total cholesterol (mmol/L)",
                   value = NA, min = 1, max = 4,
-                  width = "170px"
+                  # width = "170px"
                 ),
                 numericInput(
                   "conduct-conmed", "Concomitant medications",
                   value = NA, min = 0, max = 20,
-                  width = "170px"
+                  # width = "170px"
                 )
               )
             )
@@ -483,13 +501,16 @@ dashboardPage(
             title = tags$b("Summary statistics"),
             width = 6,
             height = 462,
-            div(style = "height: 380px;", DT::DTOutput("sum_conduct"))
+            div(
+              style = "height: 380px;",
+              withSpinner(DT::DTOutput("sum_conduct"), type = 6, color = "#3c8dbc")
+            )
           ),
           box(
             title = tags$b("Attrition risk over time"),
             width = 6,
             height = 462,
-            plotOutput("plot_risk_conduct")
+            withSpinner(plotOutput("plot_risk_conduct"), type = 6, color = "#3c8dbc")
           )
         )
       ),

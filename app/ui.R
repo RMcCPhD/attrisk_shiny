@@ -54,21 +54,12 @@ dashboardPage(
       menuItem(
         "Trial conduct", tabName = "predict_conduct", icon = icon("bolt"),
         menuSubItem("Go to page", "predict_conduct", icon = icon("square-caret-right")),
-        checkboxInput("overlay_top5_2", "Show risk for 5 similar trials?", FALSE),
-        conditionalPanel(
-          condition = "input.overlay_top5_2",
-          div(
-            style = "margin:8px 0 12px 8px; padding:8px; border-left:3px solid #3c8dbc;",
-            strong("Similar trials (NCT IDs) - risk"),
-            tags$div(style = "font-size: 15px; margin-top:6px;", uiOutput("conduct-top5_ids"))
-          )
-        ),
         checkboxInput("save_outputs2", "Save outputs?", FALSE),
         conditionalPanel(
           condition = "input.save_outputs2",
           checkboxGroupInput(
             "save_select2", "Select outputs to save",
-            c("Risk plot", "Instantaneous hazard plot", "Summary statistics")
+            c("Risk plot", "Summary statistics")
           ),
           actionButton(
             "savebtn2", "Save outputs", class = "btn-success",

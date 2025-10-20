@@ -364,9 +364,7 @@ function(input, output, session) {
   output$plot_risk_conduct <- renderPlot({
     req(conduct_plots_visible())
     conduct_risk_plot(
-      conduct_df = conduct_citl(), 
-      top5_df   = top5(), 
-      show_top5 = isTRUE(input$overlay_top5)
+      conduct_df = conduct_citl()
     )
   })
   
@@ -375,6 +373,14 @@ function(input, output, session) {
     req(conduct_sum_visible())
     conduct_sum(conduct_citl())$dt
   })
+  
+  # Save outputs user has selected
+  init_save_outputs2(
+    input, output, session,
+    conduct_predict = conduct_citl,
+    risk_plot_fun   = conduct_risk_plot,
+    sum_fun         = conduct_sum
+  )
   
   # User guide -----------------------------------------------------------------
   

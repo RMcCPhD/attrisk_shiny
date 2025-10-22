@@ -1,0 +1,53 @@
+/* The scrollable container you’ll add INSIDE each box */
+.box-scroller {
+  /* Make inner content a single non-wrapping row */
+  display: flex;
+  flex-wrap: nowrap;       /* never wrap to a new line */
+  align-items: flex-start;
+
+  /* Scrolling behavior */
+  overflow-x: auto;        /* sideways scroll when too narrow */
+  overflow-y: auto;        /* vertical scroll when too short */
+
+  /* Cap the visible height; adjust per your taste or override inline */
+  max-height: var(--box-max-height, 470px);
+
+  /* Avoid unexpected shrinking of children */
+  min-height: 0;
+  min-width: 0;
+}
+
+/* Keep each Bootstrap column as a fixed block in that horizontal strip */
+.box-scroller > [class*="col-"] {
+  display: block;     /* keep as blocks inside the strip */
+  min-width: 190px;   /* set a sensible minimum so inputs fit; tweak as needed */
+}
+
+/* Prevent text and controls from wrapping inside the scroller */
+.box-scroller label,
+.box-scroller .control-label,
+.box-scroller .radio label,
+.box-scroller .checkbox label,
+.box-scroller .btn,
+.box-scroller .form-control,
+.box-scroller .selectize-input > input {
+  white-space: nowrap;      /* never wrap text */
+}
+
+/* Keep nested grids/content from forcing weird widths */
+.box-scroller .row { 
+  display: contents;
+}
+
+/* Make sure tables or long strings don’t blow up layout; they’ll trigger scroll */
+.box-scroller table {
+  border-collapse: collapse;
+  white-space: nowrap;
+}
+
+/* Optional: if you embed DT or long code, avoid x-overflow within cells */
+.box-scroller pre, 
+.box-scroller code, 
+.box-scroller .dt-container {
+  white-space: nowrap;
+}

@@ -1,5 +1,5 @@
 
-// Design placeholders
+// Placeholders for greyed-out text indicating numeric range
 (() => {
   // Config
   const PLACEHOLDERS = {
@@ -12,12 +12,12 @@
   'conduct-age':       '18 - 100',
   'conduct-bmi':       '18 - 50',
   'conduct-sbp':       '60 - 140',
-  'conduct-hdl':       '1 - 4',
-  'conduct-totalc':    '1 - 4',
-  'conduct-t2dur':     '0.01 - 50',
-  'conduct-hba1c':     '6 - 9',
+  'conduct-hdl':       '1 - 3',
+  'conduct-totalc':    '4 - 10',
+  'conduct-t2dur':     '0.01 - 5',
+  'conduct-hba1c':     '6 - 10',
   'conduct-egfr':      '60 - 120',
-  'conduct-conmed':    '0 - 20',
+  'conduct-conmed':    '0 - 10',
   'conduct-comorbs':   '0 - 10'
   };
 

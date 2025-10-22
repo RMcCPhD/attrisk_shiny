@@ -21,6 +21,7 @@ function(input, output, session) {
       closeOnClickOutside = FALSE,
       showCancelButton = FALSE,
       confirmButtonText = "I understand",
+      confirmButtonCol = "#3c8dbc",
       size = "m",
       text = HTML(disclaimer_text),
       html = TRUE
@@ -272,13 +273,13 @@ function(input, output, session) {
     "conduct-duration"   = c(12, 520),
     "conduct-arms"       = c(2, 6),
     "conduct-age"        = c(18, 100),
-    "conduct-t2dur"      = c(0.01, 50),
-    "conduct-hba1c"      = c(6, 9),
-    "conduct-hdl"        = c(1, 4),
+    "conduct-t2dur"      = c(0.01, 5),
+    "conduct-hba1c"      = c(6, 10),
+    "conduct-hdl"        = c(1, 3),
     "conduct-bmi"        = c(19, 50),
     "conduct-egfr"       = c(60, 120),
     "conduct-sbp"        = c(60, 140),
-    "conduct-totalc"     = c(1, 4),
+    "conduct-totalc"     = c(4, 10),
     "conduct-conmed"     = c(0, 20),
     "conduct-comorbs"    = c(0, 10)
   )

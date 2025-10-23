@@ -14,19 +14,19 @@ function(input, output, session) {
   disclaimer_text <- readLines("www/text/disclaimer.txt") %>% paste(collapse = "<br>")
   
   # Show disclaimer, app loads once user acknowledges
-  observeEvent(TRUE, {
-    shinyalert(
-      title = "Disclaimer",
-      type  = "warning",
-      closeOnClickOutside = FALSE,
-      showCancelButton = FALSE,
-      confirmButtonText = "I understand",
-      confirmButtonCol = "#3c8dbc",
-      size = "m",
-      text = HTML(disclaimer_text),
-      html = TRUE
-    )
-  }, once = TRUE)
+  # observeEvent(TRUE, {
+  #   shinyalert(
+  #     title = "Disclaimer",
+  #     type  = "warning",
+  #     closeOnClickOutside = FALSE,
+  #     showCancelButton = FALSE,
+  #     confirmButtonText = "I understand",
+  #     confirmButtonCol = "#3c8dbc",
+  #     size = "m",
+  #     text = HTML(disclaimer_text),
+  #     html = TRUE
+  #   )
+  # }, once = TRUE)
   
   # Design page conditions -----------------------------------------------------
   
@@ -273,7 +273,7 @@ function(input, output, session) {
     "conduct-duration"   = c(12, 520),
     "conduct-arms"       = c(2, 6),
     "conduct-age"        = c(18, 100),
-    "conduct-t2dur"      = c(0.01, 5),
+    "conduct-t2dur"      = c(0.01, 20),
     "conduct-hba1c"      = c(6, 10),
     "conduct-hdl"        = c(1, 3),
     "conduct-bmi"        = c(19, 50),

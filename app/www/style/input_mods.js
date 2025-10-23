@@ -14,7 +14,7 @@
   'conduct-sbp':       '60 - 140',
   'conduct-hdl':       '1 - 3',
   'conduct-totalc':    '4 - 10',
-  'conduct-t2dur':     '0.01 - 5',
+  'conduct-t2dur':     '0.01 - 20',
   'conduct-hba1c':     '6 - 10',
   'conduct-egfr':      '60 - 120',
   'conduct-conmed':    '0 - 10',

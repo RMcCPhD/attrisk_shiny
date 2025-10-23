@@ -1,0 +1,9 @@
+AttRisk is an interactive application that allows users to estimate and visualise risk of participant attrition at the design and conduct stages of randomised controlled trials. 
+
+The application has been built on models fitted to data from a large number of randomised controlled trials for type 2 diabetes mellitus and cancer. The data included both trial-level summaries and participant-level information about baseline characteristics and trial completion.
+
+For trial design, users can create a randomised controlled trial with a particular set of features (e.g. duration, phase, treatment type) and evaluate how attrition might occur over time in that trial.
+
+For trial conduct, users can expand this investigation by evaluating how attrition might occur over time in a trial enrolling participants with a particular set of characteristics (e.g. age, sex, race/ethnicity).
+
+To get started with AttRisk, we recommend familiarising yourself with the user guide

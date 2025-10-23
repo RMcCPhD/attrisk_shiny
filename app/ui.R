@@ -1,21 +1,25 @@
 
-library(shiny)
-library(shinydashboard)
-library(shinycssloaders)
-library(shinyjs)
-library(shinyalert)
-library(tidyverse)
-
 # Define dashboard layout
 dashboardPage(
   dashboardHeader(title = tags$b("AttRisk")),
   dashboardSidebar(
     sidebarMenu(
-      id = "tabs", selected = "guide",
+      id = "tabs", selected = "home",
+      
+      # Home page --------------------------------------------------------------
+      
+      menuItem(
+        "Home", tabName = "home", icon = icon("home")
+      ),
       
       # User guide menu --------------------------------------------------------
       
-      menuItem("User guide", tabName = "guide", icon = icon("book")),
+      menuItem(
+        "User guide", tabName = "guide", icon = icon("book"),
+        # Guides
+        menuSubItem("Trial design", "guide_design", icon = icon("square-caret-right")),
+        menuSubItem("Trial conduct", "guide_conduct", icon = icon("square-caret-right"))
+      ),
       
       # Design menu ------------------------------------------------------------
       
@@ -81,17 +85,85 @@ dashboardPage(
     
     # Style sources (placeholders for grey-text, browser size)
     tags$head(
-      tags$script(src = "style/input_mods.js?v=2025-10-22"),
+      tags$script(src = "style/input_mods.js"),
       tags$link(rel = "stylesheet", href = "style/tidy_boxes.css")
     ),
     
     tabItems(
 
-      # User guide -------------------------------------------------------------
+      # Home page --------------------------------------------------------------
       
       tabItem(
-        tabName = "guide", 
-        h2(tags$b("AttRisk: A tool for predicting risk of attrition during trial design and conduct"))
+        tabName = "home", 
+        h2(tags$b("Welcome to AttRisk")),
+        div(
+          style = "max-width: 1000px; font-size: 20px;",
+          includeMarkdown("www/mkdown/home.Rmd")
+        )
+      ),
+      
+      # User guide -------------------------------------------------------------
+      
+      # Design
+      tabItem(
+        tabName = "guide_design",
+        h2(tags$b("User guide: Trial design")),
+        tabBox(
+          id = "design_guide_tabs",
+          width = 1000,
+          tabPanel(
+            "Overview",
+            div(
+              style = "max-width: 1000px; font-size: 20px;",
+              includeHTML("www/mkdown/design_overview.html")
+            )
+          ),
+          tabPanel(
+            "Functionality",
+            div(
+              style = "max-width: 1000px; font-size: 20px;",
+              includeHTML("www/mkdown/design_func.html")
+            )
+          ),
+          tabPanel(
+            "Example use case",
+            div(
+              style = "max-width: 1000px; font-size: 20px;",
+              includeHTML("www/mkdown/design_egs.html")
+            )
+          )
+        )
+      ),
+      
+      # Conduct
+      tabItem(
+        tabName = "guide_conduct",
+        h2(tags$b("User guide: Trial conduct")),
+        tabBox(
+          id = "conduct_guide_tabs",
+          width = 1000,
+          tabPanel(
+            "Overview",
+            div(
+              style = "max-width: 1000px; font-size: 20px;",
+              includeHTML("www/mkdown/conduct_overview.html")
+            )
+          ),
+          tabPanel(
+            "Functionality",
+            div(
+              style = "max-width: 1000px; font-size: 20px;",
+              includeHTML("www/mkdown/design_func.html")
+            )
+          ),
+          tabPanel(
+            "Example use case",
+            div(
+              style = "max-width: 1000px; font-size: 20px;",
+              includeHTML("www/mkdown/design_egs.html")
+            )
+          )
+        )
       ),
       
       # Trial design -----------------------------------------------------------
@@ -156,7 +228,7 @@ dashboardPage(
                   "design-n_facilities", "Number of sites",
                   c("<50", "50 - 99", ">=100"),
                   inline = FALSE,
-                  selected = ""
+                  selected = "<50"
                 )
               ),
               column(
@@ -419,7 +491,7 @@ dashboardPage(
                 ),
                 numericInput(
                   "conduct-t2dur", "T2DM duration (years)*",
-                  value = NA, min = 0.01, max = 5,
+                  value = NA, min = 0.01, max = 20,
                 ),
                 numericInput(
                   "conduct-bmi", "BMI (kg/m2)",

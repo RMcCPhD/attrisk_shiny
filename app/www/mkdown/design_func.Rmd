@@ -4,7 +4,7 @@ output: html_fragment
 
 ### **Using the trial design interface**
 
-Upon clicking **Trial design** in the sidebar, you will be greeted with the interface.
+Upon clicking **Trial design** in the sidebar, you will be greeted with the empty interface.
 
 ![](images/design_interface_empty.png){width="1100"}
 

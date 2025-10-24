@@ -4,17 +4,17 @@ output: html_fragment
 
 ### **Using the trial conduct interface**
 
-Upon clicking **Trial conduct** in the sidebar, you will be greeted with the interface.
+Upon clicking **Trial conduct** in the sidebar, you will be greeted with the empty interface.
 
 ![](images/conduct_interface_empty.png){width="1100"}
 
 Two buttons controlling the interface are found at the bottom of **Box A**:
 
--   **Reset inputs** - Resets the design feature and characteristic inputs
+-   **Reset inputs** - Resets inputs for design features and characteristic
 -   **Reset everything** - Resets the conduct interface (i.e. clear inputs and outputs)
 -   **Predict risk** - Initiates interface to generate outputs
 
-By default, all buttons are disabled until duration and age have been entered. Each button will display the required input (e.g. if duration is entered, each button displays **Enter age**). 
+By default, all buttons are disabled until duration and age have been entered. Each button will display the remaining required input (e.g. if duration is entered, each button displays **Enter age**).
 
 Once duration and age are entered, the buttons will activate.
 

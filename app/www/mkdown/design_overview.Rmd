@@ -6,9 +6,18 @@ output: html_fragment
 
 ![](gifs/design_interface.gif){width="1100"}
 
+The interface has the following features:
+
+- **Box A (top-left)** - Trial design features
+- **Box B (top-right)** - Attrition risk over time
+- **Box C (bottom-left)** - Summary statistics
+- **Box D (bottom-right)** - Instantaneous attrition hazard (at each timepoint)
+
 ### **Trial design features**
 
-**Box A** displays the inputs for trial design features. Most features have a default value set upon opening the interface, but these can be changed by selecting the other available options for a features.
+**Box A** displays the inputs for trial design features. Most features have a default value set upon opening the interface, but these can be changed by selecting the other available options for a feature.
+
+![](images/design_boxA.png){width="750"}
 
 The available set of trial design inputs are:
 
@@ -56,13 +65,17 @@ knitr::kable(
 
 ### **Attrition risk over time**
 
-**Box B** illustrates the risk of attrition over time. This allows for evaluating how likely attrition is to occur by a particular timepoint (e.g. week 26, week 52).
+**Box B** illustrates the risk of attrition over time. This provides an overview of how likely attrition is to occur by a particular timepoint (e.g. week 26, week 52).
+
+![](images/design_boxB.png){width="750"}
 
 The timeframe reflects the duration inputted in **Box A**. The y-axis illustrates risk of attrition (%), and the x-axis illustrates follow-up time in weeks.
 
 ### **Summary statistics**
 
 **Box C** displays summary statistics for attrition risk over time. 
+
+![](images/design_boxC.png){width="750"}
 
 The following columns are generated in this summary table:
 
@@ -96,6 +109,8 @@ knitr::kable(
 ### **Instantaneous attrition hazard (at each timepoint)**
 
 **Box D** illustrates the rate of attrition at individual follow-up timepoints. This gives an idea of when attrition is most likely to occur during a trial (e.g. is it more likely at the start or the end of follow-up).
+
+![](images/design_boxD.png){width="750"}
 
 The timeframe is setup the same as **Box B**. The y-axis illustrates the instantaneous hazard rate (larger value = attrition more likely to occur).
 

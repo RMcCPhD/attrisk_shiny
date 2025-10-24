@@ -12,7 +12,7 @@ predict_conduct <- function(tidy_inputs_conduct, conduct_inputs) {
     imp_hr <- readRDS("www/data/sobol_lst.rds")       # Sobol data (i.e. logHR)
     
     # Get posterior mean for delta
-    delta_mu <- mean(colMeans(imp_deltas))
+    delta_mu <- rowMeans(imp_deltas)
     
     # Create characteristics map and logHR tibble
     char_nms <- tibble(param = colnames(imp_hr$Z))

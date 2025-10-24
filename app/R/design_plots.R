@@ -1,6 +1,14 @@
 
 # Generate risk and instantaneous hazard plots
 design_risk_plot <- function(design_df, top5_df = NULL, show_top5 = FALSE) {
+  
+  # Compute x and y limits
+  y_min <- min(round(design_df$risk_q025 * 100, 2), na.rm = TRUE)
+  y_max <- max(round(design_df$risk_q975 * 100, 2), na.rm = TRUE)
+  
+  x_min <- min(design_df$t_wks, na.rm = TRUE)
+  x_max <- max(design_df$t_wks, na.rm = TRUE)
+  
   p <- design_df %>%
     mutate(across(contains("risk_"), ~ round(. * 100, 2))) %>% 
     ggplot(aes(x = t_wks, y = risk_q50)) +
@@ -13,8 +21,8 @@ design_risk_plot <- function(design_df, top5_df = NULL, show_top5 = FALSE) {
       linetype = "dashed"
     ) +
     labs(x = "Follow-up time (weeks)", y = "Attrition risk (%)") +
-    scale_x_continuous(n.breaks = 6) +
-    scale_y_continuous(n.breaks = 6) +
+    scale_x_continuous(n.breaks = 8, limits = c(x_min, x_max)) +
+    scale_y_continuous(n.breaks = 8, limits = c(y_min, y_max)) +
     theme_classic() +
     theme(
       axis.text = element_text(size = 15),
@@ -34,12 +42,21 @@ design_risk_plot <- function(design_df, top5_df = NULL, show_top5 = FALSE) {
 }
 
 design_haz_plot <- function(design_df) {
+  
+  # Compute x and y limits
+  y_min <- min(design_df$hazard_q50)
+  y_max <- max(design_df$hazard_q50)
+  
+  x_min <- min(design_df$t_wks, na.rm = TRUE)
+  x_max <- max(design_df$t_wks, na.rm = TRUE)
+  
   design_df %>%
+    mutate(hazard_q50 = (hazard_q50 - y_min) / (y_max - y_min)) %>% 
     ggplot(aes(x = t_wks, y = hazard_q50)) +
     geom_line() +
     labs(x = "Follow-up time (weeks)", y = "Instantaneous hazard") +
-    scale_x_continuous(n.breaks = 6) +
-    scale_y_continuous(n.breaks = 6) +
+    scale_x_continuous(n.breaks = 8, limits = c(x_min, x_max)) +
+    scale_y_continuous(n.breaks = 8, limits = c(y_min, y_max)) +
     theme_classic() +
     theme(
       axis.text = element_text(size = 15),

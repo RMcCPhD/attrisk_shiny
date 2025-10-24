@@ -11,6 +11,7 @@ So far, the team has agreed to the following:
 -   The trial will be phase 3 and double-blinded
 -   There will be three treatment arms: Two experimental (different doses of the newer antidiabetic) and one comparator
 -   Participants will be recruited from sites in North America and Europe
+-   Eligible age groups: 18-70
 
 They are now considering: 
 

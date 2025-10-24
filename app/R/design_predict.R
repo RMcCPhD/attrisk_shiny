@@ -165,7 +165,5 @@ predict_design <- function(design_inputs) {
       risk_q025 = rq$lo, risk_q50 = rq$md, risk_q975 = rq$hi,
       hazard_q025 = hq$lo, hazard_q50 = hq$md, hazard_q975 = hq$hi
     )
-    
-    print(sum_tbl)
   })
 }

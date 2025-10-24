@@ -126,7 +126,7 @@ dashboardPage(
             )
           ),
           tabPanel(
-            "Example use case",
+            "Example: T2DM",
             div(
               style = "max-width: 1000px; font-size: 20px;",
               includeHTML("www/mkdown/design_egs.html")
@@ -153,14 +153,14 @@ dashboardPage(
             "Functionality",
             div(
               style = "max-width: 1000px; font-size: 20px;",
-              includeHTML("www/mkdown/design_func.html")
+              includeHTML("www/mkdown/conduct_func.html")
             )
           ),
           tabPanel(
-            "Example use case",
+            "Example: T2DM",
             div(
               style = "max-width: 1000px; font-size: 20px;",
-              includeHTML("www/mkdown/design_egs.html")
+              includeHTML("www/mkdown/conduct_egs.html")
             )
           )
         )
@@ -384,7 +384,7 @@ dashboardPage(
                   "conduct-n_facilities", "Number of sites",
                   c("<50", "50 - 99", ">=100"),
                   inline = FALSE,
-                  selected = ""
+                  selected = "<50"
                 )
               ),
               column(
@@ -433,6 +433,14 @@ dashboardPage(
                     "Eastern Mediterranean", "European",
                     "SE Asian", "Western Pacific"
                   )
+                ),
+                div(style = "height: 4px;"),
+                actionButton(
+                  "reset_design2", "Enter duration", 
+                  class = "btn-warning",
+                  disabled = TRUE,
+                  width = "160px",
+                  style = "font-weight: bold; color:white; font-size:125%%"
                 )
               )
             )
@@ -528,7 +536,7 @@ dashboardPage(
                 div(style = "height: 61px;"),
                 numericInput(
                   "conduct-egfr", "eGFR (mmol/min/1.73m2)*",
-                  value = NA, min = 60, max = 120,
+                  value = NA, min = 15, max = 120,
                 ),
                 numericInput(
                   "conduct-totalc", "Total cholesterol (mmol/L)",

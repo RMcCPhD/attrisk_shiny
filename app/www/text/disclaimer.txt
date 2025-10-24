@@ -1,4 +1,4 @@
-AttRisk is a prototype tool built on models that were developed as part of a PhD project.
+AttRisk is a prototype application built on models that were developed as part of a PhD project.
 
 Predictive capabilities have not been clinically validated and may not reflect real-world outcomes. 
 

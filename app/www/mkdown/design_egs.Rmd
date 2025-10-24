@@ -23,6 +23,8 @@ Additionally, the team are considering how attrition can be minimised.
 
 To inform decision making, they use AttRisk to evaluate how attrition might occur using the agreed set of features, and experimenting with options for the remaining features.
 
+<br>
+
 ### **Application of AttRisk**
 
 The team first consider a 26-week trial where the comparator arm is a placebo. Inputting this into AttRisk in combination with the agreed design features and defaults, the features are:
@@ -42,12 +44,14 @@ The team then generate outputs of attrition risk for this set of design features
 
 From this trial setup, the team can see that:
 
-1. Attrition is most likely to occur at the beginning of the trial (Box C)
+1. Attrition is most likely to occur at the beginning of the trial (Box D)
 2. Approximately 13% attrition is expected by the end of follow-up (Box B)
 
 ![](images/design_example.png){width="1100"}
 
 They save the outputs to be used in future decision making.
+
+<br>
 
 They next consider what the outlook for attrition will look like if the trial was 52 weeks long and had a larger number of participants. They keep all other design features the same, changing duration to 52 weeks and the sample size to medium (500 - 999), with an estimated 500 participants.
 

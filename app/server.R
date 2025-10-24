@@ -14,20 +14,20 @@ function(input, output, session) {
   disclaimer_text <- readLines("www/text/disclaimer.txt") %>% paste(collapse = "<br>")
   
   # Show disclaimer, app loads once user acknowledges
-  # observeEvent(TRUE, {
-  #   shinyalert(
-  #     title = "Disclaimer",
-  #     type  = "warning",
-  #     closeOnClickOutside = FALSE,
-  #     showCancelButton = FALSE,
-  #     confirmButtonText = "I understand",
-  #     confirmButtonCol = "#3c8dbc",
-  #     size = "m",
-  #     text = HTML(disclaimer_text),
-  #     html = TRUE
-  #   )
-  # }, once = TRUE)
-  
+  observeEvent(TRUE, {
+    shinyalert(
+      title = "Disclaimer",
+      type  = "warning",
+      closeOnClickOutside = FALSE,
+      showCancelButton = FALSE,
+      confirmButtonText = "I understand",
+      confirmButtonCol = "#3c8dbc",
+      size = "m",
+      text = HTML(disclaimer_text),
+      html = TRUE
+    )
+  }, once = TRUE)
+
   # Design page conditions -----------------------------------------------------
   
   # Update action buttons (disabled -> usable) based on inputs
@@ -148,6 +148,8 @@ function(input, output, session) {
     design_plots_visible(FALSE)
     design_sum_visible(FALSE)
     updateCheckboxInput(session, "overlay_top5", value = FALSE)
+    updateCheckboxInput(session, "save_outputs", value = FALSE)
+    updateCheckboxInput(session, "save_select", value = FALSE)
   })
   
   # Predict design -------------------------------------------------------------
@@ -225,6 +227,7 @@ function(input, output, session) {
     risk_plot_fun   = design_risk_plot,
     hazard_plot_fun = design_haz_plot,
     sum_fun         = design_sum,
+    design_inputs,
     overlay_flag    = reactive(isTRUE(input$overlay_top5))
   )
   
@@ -238,6 +241,7 @@ function(input, output, session) {
     
     # Toggle enabled/disabled
     shinyjs::toggleState("predict_conduct", condition = have_both)
+    shinyjs::toggleState("reset_design2", condition = have_both)
     shinyjs::toggleState("reset_char", condition = have_both)
     shinyjs::toggleState("reset_conduct", condition = have_both)
     
@@ -256,7 +260,12 @@ function(input, output, session) {
       label = if (have_both) "Predict risk" else lab_needed
     )
     
-    # Reset button
+    # Reset buttons
+    updateActionButton(
+      session, "reset_design2",
+      label = if (have_both) "Reset design features" else lab_needed
+    )
+    
     updateActionButton(
       session, "reset_char",
       label = if (have_both) "Reset characteristics" else lab_needed
@@ -277,7 +286,7 @@ function(input, output, session) {
     "conduct-hba1c"      = c(6, 10),
     "conduct-hdl"        = c(1, 3),
     "conduct-bmi"        = c(19, 50),
-    "conduct-egfr"       = c(60, 120),
+    "conduct-egfr"       = c(15, 120),
     "conduct-sbp"        = c(60, 140),
     "conduct-totalc"     = c(4, 10),
     "conduct-conmed"     = c(0, 20),
@@ -355,14 +364,18 @@ function(input, output, session) {
   observeEvent(input$reset_conduct, {
     conduct_plots_visible(FALSE)
     conduct_sum_visible(FALSE)
-    updateCheckboxInput(session, "overlay_top5", value = FALSE)
+    updateCheckboxInput(session, "save_outputs2", value = FALSE)
+    updateCheckboxInput(session, "save_select2", value = FALSE)
   })
   
   # Predict conduct ------------------------------------------------------------
   
   # Clear inputs when reset buttons are used
-  observeEvent(input$reset_char, {
+  observeEvent(input$reset_design2, {
     session$sendCustomMessage("resetBox2", "design2_box")
+  })
+  
+  observeEvent(input$reset_char, {
     session$sendCustomMessage("resetBox3", "char_box")
   })
   
@@ -399,7 +412,8 @@ function(input, output, session) {
     input, output, session,
     conduct_predict = conduct_citl,
     risk_plot_fun   = conduct_risk_plot,
-    sum_fun         = conduct_sum
+    sum_fun         = conduct_sum,
+    conduct_inputs
   )
   
   # User guide -----------------------------------------------------------------

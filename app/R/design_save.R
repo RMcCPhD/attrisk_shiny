@@ -27,6 +27,7 @@ init_save_outputs <- function(
     risk_plot_fun,            # Risk plot function
     hazard_plot_fun,          # Inst. hazard plot function
     sum_fun,                  # Risk summary function
+    design_inputs,
     overlay_flag = reactive(isTRUE(input$overlay_top5)),
     base_dir = "saved_outputs"
 ) {
@@ -45,7 +46,7 @@ init_save_outputs <- function(
   
   # When download complete, remove server-side files
   output$download_saved <- downloadHandler(
-    filename = function() paste0("attrisk_outputs_", savedStamp() %||% "bundle", ".zip"),
+    filename = function() paste0("attrisk_outputs_design_", savedStamp() %||% "bundle", ".zip"),
     content = function(file) {
       zp <- lastZipPath()
       sd <- lastSaveDir()
@@ -79,6 +80,7 @@ init_save_outputs <- function(
     req(isTRUE(input$save_outputs), length(input$save_select) > 0)
     
     u <- design_predict()
+    di <- design_inputs()
     req(!is.null(u), nrow(u) > 0)
     
     overlay <- isTRUE(overlay_flag())
@@ -136,6 +138,10 @@ init_save_outputs <- function(
         df <- sum_fun(u)$df
         write_csv(df, file.path(saveDir, "summary_statistics.csv"))
       }
+      
+      df2 <- d_features(di)
+      write_csv(df2, file.path(saveDir, "design_features.csv"))
+      
     })
     
     # Zip the folder of outputs

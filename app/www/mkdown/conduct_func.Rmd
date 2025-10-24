@@ -8,9 +8,9 @@ Upon clicking **Trial conduct** in the sidebar, you will be greeted with the emp
 
 ![](images/conduct_interface_empty.png){width="1100"}
 
-Two buttons controlling the interface are found at the bottom of **Box A**:
+Three buttons controlling the interface are found at the bottom of **Box B**:
 
--   **Reset inputs** - Resets inputs for design features and characteristic
+-   **Reset inputs** - Resets inputs for design features and characteristics
 -   **Reset everything** - Resets the conduct interface (i.e. clear inputs and outputs)
 -   **Predict risk** - Initiates interface to generate outputs
 
@@ -18,17 +18,21 @@ By default, all buttons are disabled until duration and age have been entered. E
 
 Once duration and age are entered, the buttons will activate.
 
-![](gifs/conduct_buttons.gif){width="550"}
+![](gifs/conduct_buttons.gif){width="1100"}
 
 After pressing **Predict risk**, outputs will be generated in boxes C and D after a couple of seconds.
 
 ![](gifs/conduct_interface.gif){width="1100"}
 
+<br>
+
 ### **Save the generated outputs**
 
 The dropdown menu for **Trial conduct** also has a checkbox labelled **"Save outputs?"**.
 
-When selected, a series of additional checkboxes will appear allowing for the plots and summary statistics to be downloaded.
+When selected, a series of additional checkboxes will appear allowing for the plot and summary statistics to be downloaded.
+
+An Excel CSV file will be saved by default with any selected output. This contains the design features and participant characteristics inputted to generate the outputs (**features_characteristics.csv**)
 
 After selecting the desired outputs to save, press **Save outputs**. A loading bar in the bottom-right corner of the interface indicating the preparation of outputs.
 

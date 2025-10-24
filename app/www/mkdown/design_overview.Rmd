@@ -13,16 +13,20 @@ The interface has the following features:
 - **Box C (bottom-left)** - Summary statistics
 - **Box D (bottom-right)** - Instantaneous attrition hazard (at each timepoint)
 
+<br>
+
 ### **Trial design features**
 
-**Box A** displays the inputs for trial design features. Most features have a default value set upon opening the interface, but these can be changed by selecting the other available options for a feature.
+**Box A** displays the inputs for trial design features. Most features have a default value set upon opening the interface, but these can be changed by selecting the other available options for a feature. 
+
+Features with an astrix beside the name indicate a significant predictor of attrition risk.
 
 ![](images/design_boxA.png){width="750"}
 
 The available set of trial design inputs are:
 
 ```{r echo = FALSE}
-design_inputs <- dplyr::tibble(
+tbl_design <- dplyr::tibble(
   Features = c(
     "Duration", "Number of arms", "Sample size", "Estimated sample size",
     "Age limits", "BMI limits", "eGFR limits", "Phase", "
@@ -51,7 +55,7 @@ design_inputs <- dplyr::tibble(
 )
 
 knitr::kable(
-  design_inputs,
+  tbl_design,
   align = c("l", "l", "l")
 ) %>% 
   kableExtra::kable_styling(
@@ -63,6 +67,8 @@ knitr::kable(
   )
 ```
 
+<br>
+
 ### **Attrition risk over time**
 
 **Box B** illustrates the risk of attrition over time. This provides an overview of how likely attrition is to occur by a particular timepoint (e.g. week 26, week 52).
@@ -70,6 +76,8 @@ knitr::kable(
 ![](images/design_boxB.png){width="750"}
 
 The timeframe reflects the duration inputted in **Box A**. The y-axis illustrates risk of attrition (%), and the x-axis illustrates follow-up time in weeks.
+
+<br>
 
 ### **Summary statistics**
 
@@ -105,6 +113,7 @@ knitr::kable(
   )
 ```
 
+<br>
 
 ### **Instantaneous attrition hazard (at each timepoint)**
 

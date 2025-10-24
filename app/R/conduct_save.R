@@ -25,6 +25,7 @@ init_save_outputs2 <- function(
     conduct_predict,          # Risk tibble
     risk_plot_fun,            # Risk plot function
     sum_fun,                  # Risk summary function
+    conduct_inputs,           # User inputs (design features, characteristics)
     base_dir = "saved_outputs"
 ) {
   # Paths NULL by default, reactive to user selection of outputs
@@ -42,7 +43,7 @@ init_save_outputs2 <- function(
   
   # When download complete, remove server-side files
   output$download_saved2 <- downloadHandler(
-    filename = function() paste0("attrisk_outputs_", savedStamp() %||% "bundle", ".zip"),
+    filename = function() paste0("attrisk_outputs_conduct_", savedStamp() %||% "bundle", ".zip"),
     content = function(file) {
       zp <- lastZipPath()
       sd <- lastSaveDir()
@@ -76,6 +77,7 @@ init_save_outputs2 <- function(
     req(isTRUE(input$save_outputs2), length(input$save_select2) > 0)
     
     u <- conduct_predict()
+    cdi <- conduct_inputs()
     req(!is.null(u), nrow(u) > 0)
     
     stamp <- format(Sys.time(), "%Y-%m-%d")
@@ -102,6 +104,10 @@ init_save_outputs2 <- function(
         df <- sum_fun(u)$df
         write_csv(df, file.path(saveDir, "summary_statistics.csv"))
       }
+      
+      df2 <- c_features(cdi)
+      write_csv(df2, file.path(saveDir, "features_characteristics.csv"))
+      
     })
     
     # Zip the folder of outputs

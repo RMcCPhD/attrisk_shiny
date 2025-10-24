@@ -13,14 +13,20 @@ The interface has the following features:
 - **Box C (bottom-left)** - Summary statistics
 - **Box D (bottom-right)** - Attrition risk over time
 
+<br>
+
 ### **Trial design features**
 
 **Box A** displays the inputs for trial design features. Most features have a default value set upon opening the interface, but these can be changed by selecting the other available options for a feature.
 
+Features with an astrix beside the name indicate a significant predictor of attrition risk.
+
+![](images/conduct_boxA.png){width="750"}
+
 The available set of trial design inputs are:
 
 ```{r echo = FALSE}
-conduct_inputs <- dplyr::tibble(
+tbl_design2 <- dplyr::tibble(
   Features = c(
     "Duration", "Number of arms", "Sample size", "Estimated sample size",
     "Age limits", "BMI limits", "eGFR limits", "Phase", "
@@ -49,7 +55,7 @@ conduct_inputs <- dplyr::tibble(
 )
 
 knitr::kable(
-  conduct_inputs,
+  tbl_design2,
   align = c("l", "l", "l")
 ) %>% 
   kableExtra::kable_styling(
@@ -61,12 +67,20 @@ knitr::kable(
   )
 ```
 
+<br>
+
 ### **Participant baseline characteristics**
 
-**Box B** displays the inputs for participant baseline characteristics:
+**Box B** displays the inputs for participant baseline characteristics. Similar to **Trial design features** defaults are set for a number of categorical characteristics, which can be changed by selecting the other available options.
+
+Characteristics with an astrix beside the name indicate a significant predictor of attrition risk.
+
+![](images/conduct_boxB.png){width="750"}
+
+The available set of baseline characteristics are:
 
 ```{r echo = FALSE}
-conduct_inputs <- dplyr::tibble(
+tbl_chars <- dplyr::tibble(
   Features = c(
     "Age", "Sex", "Race", "Current smoker",
     "Type 2 diabetes mellitus (T2DM) duration", 
@@ -93,13 +107,13 @@ conduct_inputs <- dplyr::tibble(
     "18 to 100 years", "Female, Male", 
     "Asian, Black/African American, White, Other",
     "No, Yes", "0.01 (<1 week) to 20 years", "6 to 10%",
-    "60 to 120ml/min/1.73m2", "18 to 50kgm/2", "1 to 3mmol/L", "4 to 10mmol/L",
+    "15 to 120ml/min/1.73m2", "18 to 50kgm/2", "1 to 3mmol/L", "4 to 10mmol/L",
     "60 to 140mmHg", "0 to 10", "0 to 10"
   )
 )
 
 knitr::kable(
-  conduct_inputs,
+  tbl_chars,
   align = c("l", "l", "l")
 ) %>% 
   kableExtra::kable_styling(
@@ -111,9 +125,13 @@ knitr::kable(
   )
 ```
 
+<br>
+
 ### **Summary statistics**
 
-**Box C** displays summary statistics for attrition risk over time. 
+**Box C** displays summary statistics for attrition risk over time.
+
+![](images/conduct_boxC.png){width="750"}
 
 The following columns are generated in this summary table:
 
@@ -143,6 +161,12 @@ knitr::kable(
   )
 ```
 
+<br>
+
 ### **Attrition risk over time**
 
-**Box D** illustrates risk of attrition over time for a participant with certain characteristics in a trial with an inputted set of design features. The timeframe reflects the duration inputted in **Box A**. The y-axis illustrates risk of attrition (%), and the x-axis illustrates follow-up time in weeks.
+**Box D** illustrates risk of attrition over time. Extending upon **Trial design**, this gives an overview of how likely attrition is to occur for a participant with certain characteristics in the user-specified trial by a particular timepoint. 
+
+![](images/conduct_boxD.png){width="750"}
+
+The timeframe reflects the duration inputted in **Box A**. The y-axis illustrates risk of attrition (%), and the x-axis illustrates follow-up time in weeks.

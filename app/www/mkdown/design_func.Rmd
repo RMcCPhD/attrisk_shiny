@@ -23,6 +23,8 @@ After pressing **Predict risk**, outputs will be generated in boxes B, C and D a
 
 ![](gifs/design_interface.gif){width="1100"}
 
+<br>
+
 ### **Compare outputs to previously conducted, real-world trials**
 
 The dropdown menu for **Trial design** in the sidebar has a checkbox labelled **"Show risk for 5 similar trials?"**. 
@@ -33,11 +35,15 @@ When selected, the total risk (%) and ClinicalTrials.gov identifiers for the 5 t
 
 ![](gifs/design_similar_trials.gif){width="1100"}
 
+<br>
+
 ### **Save the generated outputs**
 
 The dropdown menu for **Trial design** also has a checkbox labelled **"Save outputs?"**.
 
 When selected, a series of additional checkboxes will appear allowing for the plots and summary statistics to be downloaded.
+
+An Excel CSV file will be saved by default with any selected output. This contains the design features inputted to generate the outputs (**design_features.csv**)
 
 After selecting the desired outputs to save, press **Save outputs**. A loading bar in the bottom-right corner of the interface indicating the preparation of outputs.
 
@@ -47,7 +53,7 @@ Shortly after, a popup will appear indicating that the outputs are ready to down
 
 Click **Close** to return to the interface.
 
-If **"Show risk for 5 similar trials?"** is selected, the downloadable outputs will include a summary of total risk (%) and the ClinicalTrials.gov identifiers for the 5 most similar trials.
+If **"Show risk for 5 similar trials?"** is selected, the downloadable outputs will include a summary of total risk (%) and the ClinicalTrials.gov identifiers for the 5 most similar trials (**5_similar_trials.csv**).
 
 ![](gifs/design_save_outputs_similar.gif){width="1100"}
 

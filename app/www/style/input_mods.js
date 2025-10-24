@@ -16,7 +16,7 @@
   'conduct-totalc':    '4 - 10',
   'conduct-t2dur':     '0.01 - 20',
   'conduct-hba1c':     '6 - 10',
-  'conduct-egfr':      '60 - 120',
+  'conduct-egfr':      '15 - 120',
   'conduct-conmed':    '0 - 10',
   'conduct-comorbs':   '0 - 10'
   };

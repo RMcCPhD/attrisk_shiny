@@ -4,57 +4,76 @@ output: html_fragment
 
 ### **Scenario**
 
-A team of trialists are in the early stages of designing a randomised controlled trial evaluating the efficacy of a newer antidiabetic in people with type 2 diabetes.
+Following the example for **Trial design features**, a team of trialists have designed a randomised controlled trial to evaluate the efficacy of a newer antidiabetic in people with type 2 diabetes.
 
-So far, the team has agreed to the following:
+The team have agreed on the following design features:
 
--   The trial will be phase 3 and double-blinded
--   There will be three treatment arms: Two experimental (different doses of the newer antidiabetic) and one comparator
--   Participants will be recruited from sites in North America and Europe
-
-They are now considering: 
-
-- How long the trial should be 
-- How many participants should be recruited 
-- Which comparator to use in the third arm
-
-Additionally, the team are considering how attrition can be minimised. 
-
-To inform decision making, they use AttRisk to evaluate how attrition might occur using the agreed set of features, and experimenting with options for the remaining features.
-
-### **Application of AttRisk**
-
-The team first consider a 26-week trial where the comparator arm is a placebo. Inputting this into AttRisk in combination with the agreed design features and defaults, the features are:
-
-- Phase 3, double-blinding, three treatment arms
-- Sites in North America and Europe
-- 26 weeks of follow-up, placebo comparator
-- Small trial size (<500) with an estimated 250 participants
+- Phase 3, double-blinded trial
+- Three treatment arms: Two experimental (different doses of the newer antidiabetic) and a placebo
+- Participants will be recruited in North America and Europe
+- 26 weeks of follow-up
+- Recruitment target of 500 participants
 - Minimum age of 18yrs, maximum age of 70yrs
-- No limits on BMI or eGFR
+- No limits on BMI or EGFR
 - <50 sites
-- One primary outcome
+- One primary outcome (change from baseline HbA1c)
 
-The team then generate outputs of attrition risk for this set of design features.
+The team have decided to focus retention efforts at the early stages of the trial because AttRisk indicated that attrition might occur most at this stage.
 
-![](gifs/design_example.gif){width="1100"}
+The team are now considering how attrition might occur in the trial for different types of participants who could be enrolled. They use AttRisk to evaluate this by building different types of participant profiles.
 
-From this trial setup, the team can see that:
+<br>
 
-1. Attrition is most likely to occur at the beginning of the trial (Box C)
-2. Approximately 13% attrition is expected by the end of follow-up (Box B)
+### **Participant scenario #1**
 
-![](images/design_example.png){width="1100"}
+The team first consider what attrition might look like for a middle-age participant with multimorbidity who was recently diagnosed with type 2 diabetes. They settle on the following characteristics profile:
 
-They save the outputs to be used in future decision making.
+- 45 year old white female who used to smoke tobacco (no longer does)
+- Diagnosed with T2DM 2 years ago, overweight (BMI 28.9)
+- Has hyperglycaemia (HbA1c 8%), blood glucose is inadequately controlled by maintenance antidiabetics
+- Has stage 2 kidney disease (eGFR <90ml/min/1.732)
+- Has COPD and migraines, takes a nebuliser and a medication to manage these conditions
 
-They next consider what the outlook for attrition will look like if the trial was 52 weeks long and had a larger number of participants. They keep all other design features the same, changing duration to 52 weeks and the sample size to medium (500 - 999), with an estimated 500 participants.
+The team input these characteristics and generate outputs of attrition risk.
 
-From this setup, the team see that:
+![](gifs/conduct_example.gif){width="1100"}
 
-1. Attrition is still most likely to occur at the beginning of the trial
-2. By 52 weeks, approximately 21% attrition is expected
+The outputs indicate to the team that the risk of attrition is relatively low for this participant (approximately 8%) by the end of follow-up.
 
-![](images/design_example2.png){width="1100"}
+![](images/conduct_example.png){width="1100"}
 
-They save these outputs for comparison to the 26-week, smaller trial for decision making around retention (e.g. implementing strategies at the beginning of the trial).
+<br>
+
+### **Participant scenario #2**
+
+The team next consider what attrition might look like for a participant with multimorbidity who is male, of a different racial identity and has had T2DM for a longer period of time:
+
+- 60 year old African American male who current smokes tobacco
+- Diagnosed with T2DM 18 years ago, obese (BMI 32.3)
+- Has hyperglycemia (HbA1c 8.5%), inadequately controlled by maintenance antidiabetics
+- Has stage 3 kidney disease (eGFR <60ml/min/1.73m2)
+- Has hypertension, gout and fatty liver disease, takes medications for hypertension and gout
+
+![](gifs/conduct_example2.gif){width="1100"}
+
+The outputs indicate that a participant with this characteristics profile has a considerably higher risk of attrition (approximately 15%) by the end of follow-up.
+
+![](images/conduct_example2.png){width="1100"}
+
+<br>
+
+### **Participant scenario #3**
+
+The team then consider what attrition might look like for a healthier, younger participant who was recently diagnosed with T2DM:
+
+- 35 year old Asian female who does not smoke tobacco
+- Diagnosed with T2DM 3 years ago, class III obesity (BMI 40.9)
+- Blood glucose is adequately controlled by maintenance antidiabetics (HbA1c 6.3%)
+- Does not have kidney disease (>90ml/min/1.73m2)
+- Does not have any comorbidities but takes medications for allergies and gastrointestinal issues
+
+![](gifs/conduct_example3.gif){width="1100"}
+
+The outputs indicate to the team that the risk of attrition is lowest for this participant (approximately 5%) by the end of follow-up.
+
+![](images/conduct_example3.png){width="1100"}

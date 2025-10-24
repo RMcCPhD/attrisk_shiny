@@ -74,6 +74,5 @@ predict_conduct <- function(tidy_inputs_conduct, conduct_inputs) {
       compl_q50 = arq$md, drp_q50 = N - compl_q50,
       risk_q025 = rq$lo, risk_q50 = rq$md, risk_q975 = rq$hi
     )
-    print(sum_tbl)
   })
 }

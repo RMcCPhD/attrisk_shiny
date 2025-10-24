@@ -35,7 +35,7 @@ tidy_inputs_conduct <- function(input) {
       sbp     = input$"conduct-sbp",    
       total   = input$"conduct-totalc",    
       conmed  = input$"conduct-conmed",   
-      n_atc   = input$"conduct-comorbs",
+      comorbs = input$"conduct-comorbs",
       sex     = input$"conduct-sex",
       current = input$"conduct-smoke",
       race    = input$"conduct-race"
@@ -146,5 +146,6 @@ tidy_inputs_conduct <- function(input) {
         ),
       ) %>%
       filter(!is.na(value_prep))
+    
   })
 }

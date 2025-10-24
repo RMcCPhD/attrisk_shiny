@@ -108,10 +108,8 @@ knitr::kable(
 
 ### **Instantaneous attrition hazard (at each timepoint)**
 
-**Box D** illustrates the rate of attrition at individual follow-up timepoints. This gives an idea of when attrition is most likely to occur during a trial (e.g. is it more likely at the start or the end of follow-up).
+**Box D** illustrates the rate of attrition at each timepoint. This gives an idea of when attrition is most likely to occur during a trial (e.g. is it more likely at the start or the end of follow-up).
 
 ![](images/design_boxD.png){width="750"}
 
-The timeframe is setup the same as **Box B**. The y-axis illustrates the instantaneous hazard rate (larger value = attrition more likely to occur).
-
-
+The timeframe is setup the same as **Box B**. The y-axis represents a scaled hazard rate, ranging from 0 (lowest) to 1 (highest).

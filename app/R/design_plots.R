@@ -56,7 +56,7 @@ design_haz_plot <- function(design_df) {
     geom_line() +
     labs(x = "Follow-up time (weeks)", y = "Instantaneous hazard") +
     scale_x_continuous(n.breaks = 8, limits = c(x_min, x_max)) +
-    scale_y_continuous(n.breaks = 8, limits = c(y_min, y_max)) +
+    scale_y_continuous(n.breaks = 8) +
     theme_classic() +
     theme(
       axis.text = element_text(size = 15),

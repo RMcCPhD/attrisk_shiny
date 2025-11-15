@@ -189,7 +189,7 @@ dashboardPage(
                 ),
                 numericInput(
                   "design_n", "Number of participants",
-                  value = NA,
+                  value = NA, min = 100, max = 10000
                 ),
                 strong("Trial size"),
                 textOutput("design_sample_size"),
@@ -342,7 +342,7 @@ dashboardPage(
                 ),
                 numericInput(
                   "conduct_n", "Number of participants",
-                  value = NA,
+                  value = NA, min = 100, max = 10000,
                 ),
                 strong("Trial size"),
                 textOutput("conduct_sample_size"),

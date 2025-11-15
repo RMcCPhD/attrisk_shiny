@@ -149,7 +149,7 @@ predict_design <- function(design_inputs) {
     t2eq <- qfun(t2e)
     
     # Counts (if inputted by user)
-    N_input <- filter(input_param, param == "est_sample") %>% pull(value_prep)
+    N_input <- filter(input_param, param == "n") %>% pull(value_prep)
     N <- as.numeric(N_input)
     
     # Completer/Dropout estimates (using estimated sample)

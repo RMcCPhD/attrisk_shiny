@@ -5,6 +5,13 @@ c_features <- function(conduct_inputs) {
     select(features_chars = name, value, value_prep) %>% 
     mutate(
       value = case_when(
+        features == "sample" 
+        & as.numeric(value_prep) < 500 ~ "Small (<500)",
+        features == "sample" 
+        & as.numeric(value_prep) >= 500 
+        & as.numeric(value_prep)  < 1000 ~ "Medium (500 – 999)",
+        features == "sample" 
+        & as.numeric(value_prep) >= 1000 ~ "Large (≥1000)",
         is.na(value) & value_prep == "0" ~ "Placebo",
         is.na(value) & value_prep == "1" ~ "Active comparator",
         is.na(value) & value_prep == "2" ~ "Placebo, Active comparator",
@@ -21,7 +28,7 @@ c_features <- function(conduct_inputs) {
       features_chars = factor(
         features_chars,
         levels = c(
-          "duration", "n_arms", "sample", "est_sample",
+          "duration", "n_arms", "n", "sample",
           "age_lower", "age_upper", "min_bmi", "max_bmi",
           "min_egfr", "max_egfr", "phase", "n_poms",
           "n_facilities", "trttype",
@@ -39,8 +46,8 @@ c_features <- function(conduct_inputs) {
         features_chars,
         "duration" ~ "Duration (weeks)",
         "n_arms" ~ "Number of arms",
-        "est_sample" ~ "Estimated sample size",
-        "sample" ~ "Sample size",
+        "n" ~ "Number of participants",
+        "sample" ~ "Trial size",
         "n_facilities" ~ "Number of sites",
         "age_lower" ~ "Lower age limits",
         "age_upper" ~ "Upper age limits*",

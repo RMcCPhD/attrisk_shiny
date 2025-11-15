@@ -124,7 +124,7 @@ conduct_design_params <- function(conduct_inputs) {
     )
     
     # Estimated sample
-    N_input <- filter(input_param, param == "est_sample") %>% pull(value_prep)
+    N_input <- filter(input_param, param == "n") %>% pull(value_prep)
     N <- as.numeric(N_input)
     
     # Estimated dropouts derived from T2E

@@ -9,22 +9,22 @@ tidy_inputs <- function(input) {
     
     # Get list of inputs
     inputs <- list(
-      duration     = input$"design-duration",
-      n_arms       = input$"design-arms",
-      est_sample   = input$"design-est_sample",
-      sample       = input$"design-sample_size",
-      n_facilities = input$"design-n_facilities",
-      age_lower    = input$"design-age_lower",
-      age_upper    = input$"design-age_upper",
-      min_bmi      = input$"design-bmi_lower",
-      max_bmi      = input$"design-bmi_upper",
-      min_egfr     = input$"design-egfr_lower",
-      max_egfr     = input$"design-egfr_upper",
-      who_reg      = paste0(input$"design-who_reg", collapse = ", "),
-      one_pom      = input$"design-poms",
-      trttype      = paste0(input$"design-trttype", collapse = ", "),
-      phase        = input$"design-phase",
-      blinding     = input$"design-blind"
+      duration     = input$"design_duration",
+      n_arms       = input$"design_arms",
+      n            = input$"design_n",
+      sample       = input$"design_n",
+      n_facilities = input$"design_n_facilities",
+      age_lower    = input$"design_age_lower",
+      age_upper    = input$"design_age_upper",
+      min_bmi      = input$"design_bmi_lower",
+      max_bmi      = input$"design_bmi_upper",
+      min_egfr     = input$"design_egfr_lower",
+      max_egfr     = input$"design_egfr_upper",
+      who_reg      = paste0(input$"design_who_reg", collapse = ", "),
+      one_pom      = input$"design_poms",
+      trttype      = paste0(input$"design_trttype", collapse = ", "),
+      phase        = input$"design_phase",
+      blinding     = input$"design_blind"
     )
     
     # Create tibble of inputs
@@ -46,9 +46,9 @@ tidy_inputs <- function(input) {
           # Duration in years
           name == "duration" ~ as.character(as.numeric(value)/52),
           # Sample size - ordinal
-          name == "sample" & value == "Small (<500)" ~ "0",
-          name == "sample" & value == "Medium (500 - 999)" ~ "1",
-          name == "sample" & value == "Large (>=1000)" ~ "2",
+          name == "sample" & as.numeric(value) < 500 ~ "0",
+          name == "sample" & as.numeric(value) >= 500 & as.numeric(value) < 1000  ~ "1",
+          name == "sample" & as.numeric(value) >= 1000 ~ "2",
           # Number of facilities - ordinals
           name == "n_facilities" & value == "<50" ~ "0",
           name == "n_facilities" & value == "50 - 99" ~ "1",

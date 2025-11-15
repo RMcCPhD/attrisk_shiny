@@ -4,21 +4,25 @@
   // Config
   const PLACEHOLDERS = {
   // design
-  'design-duration':   '12 - 520',
-  'design-facilities': '1 - 500',
-  'design-arms':       '2 - 6',
+  'design_duration':   '12 - 520',
+  'design_facilities': '1 - 500',
+  'design_arms':       '2 - 6',
+  'design_n':          '100 - 10,000',
   // conduct
-  'conduct-duration':  '12 - 520',
-  'conduct-age':       '18 - 100',
-  'conduct-bmi':       '18 - 50',
-  'conduct-sbp':       '60 - 140',
-  'conduct-hdl':       '1 - 3',
-  'conduct-totalc':    '4 - 10',
-  'conduct-t2dur':     '0.01 - 20',
-  'conduct-hba1c':     '6 - 10',
-  'conduct-egfr':      '15 - 120',
-  'conduct-conmed':    '0 - 10',
-  'conduct-comorbs':   '0 - 10'
+  'conduct_duration':   '12 - 520',
+  'conduct_facilities': '1 - 500',
+  'conduct_arms':       '2 - 6',
+  'conduct_n':          '100 - 10,000',
+  'conduct_age':        '18 - 100',
+  'conduct_bmi':        '18 - 50',
+  'conduct_sbp':        '90 - 200',
+  'conduct_hdl':        '1 - 4',
+  'conduct_totalc':     '4 - 10',
+  'conduct_t2dur':      '0.01 - 20',
+  'conduct_hba1c':      '6 - 10',
+  'conduct_egfr':       '15 - 120',
+  'conduct_conmed':     '0 - 10',
+  'conduct_comorbs':    '0 - 10'
   };
 
   // Apply placeholders (i.e. greyed out text) to each input

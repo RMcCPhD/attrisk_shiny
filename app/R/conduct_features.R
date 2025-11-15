@@ -5,12 +5,12 @@ c_features <- function(conduct_inputs) {
     select(features_chars = name, value, value_prep) %>% 
     mutate(
       value = case_when(
-        features == "sample" 
+        features_chars == "sample" 
         & as.numeric(value_prep) < 500 ~ "Small (<500)",
-        features == "sample" 
+        features_chars == "sample" 
         & as.numeric(value_prep) >= 500 
         & as.numeric(value_prep)  < 1000 ~ "Medium (500 – 999)",
-        features == "sample" 
+        features_chars == "sample" 
         & as.numeric(value_prep) >= 1000 ~ "Large (≥1000)",
         is.na(value) & value_prep == "0" ~ "Placebo",
         is.na(value) & value_prep == "1" ~ "Active comparator",

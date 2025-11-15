@@ -28,14 +28,15 @@ The available set of trial design inputs are:
 ```{r echo = FALSE}
 tbl_design <- dplyr::tibble(
   Features = c(
-    "Duration", "Number of arms", "Sample size", "Estimated sample size",
+    "Duration", "Number of arms", "Number of participants", "Trial size",
     "Age limits", "BMI limits", "eGFR limits", "Phase", "
     Number of primary outcomes (POMs)", "Comparators",
     "Blinding type", "WHO regions involved"
   ),
   Description = c(
     "Duration of trial follow-up in weeks", "Number of treatment arms",
-    "Approximate sample size", "Fine-tuning of sample size",
+    "Total number of randomised participants", 
+    "Trial size (based on inputed total number of participants)",
     "Upper and lower age limits", "Upper and lower BMI limits",
     "Upper and lower estimated glomerular filtration rate (eGFR) limits",
     "Trial phase", "Number of primary outcomes", "Comparator treatment groups",
@@ -43,8 +44,8 @@ tbl_design <- dplyr::tibble(
   ),
   `Categories and limits` = c(
     "12 to 520 weeks", "2 to 6 arms", 
-    "Small (<500), Medium (500 - 999), Large (>=1000)",
-    "Optional input, default is midpoint of category (e.g. 250 if small)",
+    "100 to 10,000 randomised participants",
+    "Based on number of participants: Small (<500), Medium (500 - 999), Large (>=1000)",
     "Upper: 70yr, >70yrs; Lower: 18yrs, >18yrs",
     "Upper: None, <45kg/m2; Lower: None, <=25kg/m2",
     "Upper: None, <=60 or >60ml/min/1.73m2; Lower: None, <=30 or >30ml/min/1.73m2",

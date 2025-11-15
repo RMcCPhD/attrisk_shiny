@@ -13,9 +13,9 @@ Two buttons controlling the interface are found at the bottom of **Box A**:
 -   **Reset everything** - Resets the design interface (i.e. clear inputs and outputs)
 -   **Predict risk** - Initiates interface to generate outputs
 
-By default, both buttons are disabled until duration has been entered (this is required to generate outputs). Each button will display **Enter duration** to indicate this. 
+By default, both buttons are disabled all numeric inputs are entered (duration, number of arms, number of participants). Each button will display the required input to indicate this as other numeric inputs are entered. 
 
-Once duration is entered, the buttons will activate.
+Once all numeric inputs are entered, the buttons will activate.
 
 ![](gifs/design_buttons.gif){width="550"}
 

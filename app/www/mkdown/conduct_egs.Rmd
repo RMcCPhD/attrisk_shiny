@@ -12,7 +12,7 @@ The team have agreed on the following design features:
 - Three treatment arms: Two experimental (different doses of the newer antidiabetic) and a placebo
 - Participants will be recruited in North America and Europe
 - 26 weeks of follow-up
-- Recruitment target of 500 participants
+- Ideally 500 randomised participants
 - Minimum age of 18yrs, maximum age of 70yrs
 - No limits on BMI or EGFR
 - <50 sites
@@ -38,9 +38,9 @@ The team input these characteristics and generate outputs of attrition risk.
 
 ![](gifs/conduct_example.gif){width="1100"}
 
-The outputs indicate to the team that the risk of attrition is relatively low for this participant (approximately 8%) by the end of follow-up.
+The outputs indicate to the team that the risk of attrition is approximately 9.6% by the end of follow-up.
 
-![](images/conduct_example.png){width="1100"}
+![](images/conduct_example1.png){width="1100"}
 
 <br>
 
@@ -54,9 +54,7 @@ The team next consider what attrition might look like for a participant with mul
 - Has stage 3 kidney disease (eGFR <60ml/min/1.73m2)
 - Has hypertension, gout and fatty liver disease, takes medications for hypertension and gout
 
-![](gifs/conduct_example2.gif){width="1100"}
-
-The outputs indicate that a participant with this characteristics profile has a considerably higher risk of attrition (approximately 15%) by the end of follow-up.
+The outputs indicate that a participant with this characteristics profile has a considerably higher risk of attrition (approximately 19%) by the end of follow-up.
 
 ![](images/conduct_example2.png){width="1100"}
 
@@ -64,16 +62,14 @@ The outputs indicate that a participant with this characteristics profile has a 
 
 ### **Participant scenario #3**
 
-The team then consider what attrition might look like for a healthier, younger participant who was recently diagnosed with T2DM:
+The team then consider what attrition might look like for a younger participant who was recently diagnosed with T2DM:
 
 - 35 year old Asian female who does not smoke tobacco
 - Diagnosed with T2DM 3 years ago, class III obesity (BMI 40.9)
 - Blood glucose is adequately controlled by maintenance antidiabetics (HbA1c 6.3%)
 - Does not have kidney disease (>90ml/min/1.73m2)
-- Does not have any comorbidities but takes medications for allergies and gastrointestinal issues
+- Does not have any comorbidities but takes two supplements
 
-![](gifs/conduct_example3.gif){width="1100"}
-
-The outputs indicate to the team that the risk of attrition is lowest for this participant (approximately 5%) by the end of follow-up.
+The outputs indicate to the team that the risk of attrition is lowest for this participant (approximately 5.2%) by the end of follow-up.
 
 ![](images/conduct_example3.png){width="1100"}

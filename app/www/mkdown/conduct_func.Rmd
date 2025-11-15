@@ -14,9 +14,9 @@ Three buttons controlling the interface are found at the bottom of **Box B**:
 -   **Reset everything** - Resets the conduct interface (i.e. clear inputs and outputs)
 -   **Predict risk** - Initiates interface to generate outputs
 
-By default, all buttons are disabled until duration and age have been entered. Each button will display the remaining required input (e.g. if duration is entered, each button displays **Enter age**).
+By default, all buttons are disabled all numeric inputs are entered (duration, number of arms, number of participants, age). Each button will display the required input to indicate this as other numeric inputs are entered. 
 
-Once duration and age are entered, the buttons will activate.
+Once all numeric inputs are entered, the buttons will activate.
 
 ![](gifs/conduct_buttons.gif){width="1100"}
 

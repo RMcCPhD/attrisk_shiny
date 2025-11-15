@@ -225,10 +225,10 @@ function(input, output, session) {
     # Choose labels based on what input is missing (duration, sample size)
     lab_needed <- if (!have_duration) {
       "Enter duration"
-    } else if (!have_n) {
-      "Enter sample size"
     } else if (!have_arms) {
       "Enter arms"
+    } else if (!have_n) {
+      "Enter sample size"
     } else if (!have_age) {
       "Enter age"
     } else if (have_all & !inputs_valid) {

@@ -1,7 +1,7 @@
 
 # Define dashboard layout
 dashboardPage(
-  dashboardHeader(title = tags$b("AttRisk")),
+  dashboardHeader(title = tags$b("AttRisk T2DM")),
   dashboardSidebar(
     sidebarMenu(
       id = "tabs", selected = "home",
@@ -126,7 +126,7 @@ dashboardPage(
             )
           ),
           tabPanel(
-            "Example: T2DM",
+            "Example",
             div(
               style = "max-width: 1000px; font-size: 20px;",
               includeHTML("www/mkdown/design_egs.html")
@@ -157,7 +157,7 @@ dashboardPage(
             )
           ),
           tabPanel(
-            "Example: T2DM",
+            "Example",
             div(
               style = "max-width: 1000px; font-size: 20px;",
               includeHTML("www/mkdown/conduct_egs.html")
@@ -180,52 +180,49 @@ dashboardPage(
               column(
                 width = 3,
                 numericInput(
-                  "design-duration", "Duration (weeks)",
+                  "design_duration", "Duration (weeks)",
                   value = NA, min = 12, max = 520,
                 ),
                 numericInput(
-                  "design-arms", "Number of arms",
+                  "design_arms", "Number of arms",
                   value = 2, min = 2, max = 6,
                 ),
-                radioButtons(
-                  "design-sample_size", "Sample size",
-                  c("Small (<500)", "Medium (500 - 999)", "Large (>=1000)"),
-                  inline = FALSE,
-                  selected = "Small (<500)"
-                ),
                 numericInput(
-                  "design-est_sample", "Estimated sample size",
+                  "design_n", "Number of participants",
                   value = NA,
+                ),
+                strong("Trial size"),
+                textOutput("design_sample_size"),
+                div(style = "height: 15px;"),
+                radioButtons(
+                  "design_phase", "Phase",
+                  c("3", "4"),
+                  inline = TRUE,
+                  selected = "3"
                 )
               ),
               column(
                 width = 3,
                 radioButtons(
-                  "design-age_lower", "Lower age limits",
+                  "design_age_lower", "Lower age limits",
                   c("18yr", ">18yr"),
                   inline = TRUE,
                   selected = "18yr"
                 ),
                 radioButtons(
-                  "design-bmi_lower", "Lower bmi limits",
+                  "design_bmi_lower", "Lower bmi limits",
                   c("None", "<=25 kg/m2"),
                   inline = TRUE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "design-egfr_lower", "Lower eGFR limits",
+                  "design_egfr_lower", "Lower eGFR limits",
                   c("None", "<=30 ml/min/1.73m2", ">30 ml/min/1.73m2"),
                   inline = FALSE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "design-phase", "Phase",
-                  c("3", "4"),
-                  inline = TRUE,
-                  selected = "3"
-                ),
-                radioButtons(
-                  "design-n_facilities", "Number of sites",
+                  "design_n_facilities", "Number of sites",
                   c("<50", "50 - 99", ">=100"),
                   inline = FALSE,
                   selected = "<50"
@@ -234,31 +231,31 @@ dashboardPage(
               column(
                 width = 3,
                 radioButtons(
-                  "design-age_upper", "Upper age limits*",
+                  "design_age_upper", "Upper age limits*",
                   c("70yr", ">70yr"),
                   inline = TRUE,
                   selected = "70yr"
                 ),
                 radioButtons(
-                  "design-bmi_upper", "Upper bmi limits",
+                  "design_bmi_upper", "Upper bmi limits",
                   c("None", "<45 kg/m2"),
                   inline = TRUE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "design-egfr_upper", "Upper eGFR limits",
+                  "design_egfr_upper", "Upper eGFR limits",
                   c("None", "<=60 ml/min/1.73m2", ">60 ml/min/1.73m2"),
                   inline = FALSE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "design-poms", "Number of POMs",
+                  "design_poms", "Number of POMs",
                   c("1", ">1"),
                   inline = TRUE,
                   selected = "1"
                 ),
                 checkboxGroupInput(
-                  "design-trttype", "Comparators",
+                  "design_trttype", "Comparators",
                   c("Placebo", "Active comparator"),
                   selected = "Placebo"
                 )
@@ -266,12 +263,12 @@ dashboardPage(
               column(
                 width = 3,
                 radioButtons(
-                  "design-blind", "Blinding type",
+                  "design_blind", "Blinding type",
                   c("Open label", "Double", "Triple", "Quadruple"),
                   selected = "Open label"
                 ),
                 checkboxGroupInput(
-                  "design-who_reg", "WHO regions involved",
+                  "design_who_reg", "WHO regions involved",
                   c(
                     "African", "The Americas*",
                     "Eastern Mediterranean", "European",
@@ -336,52 +333,49 @@ dashboardPage(
               column(
                 width = 3,
                 numericInput(
-                  "conduct-duration", "Duration (weeks)",
+                  "conduct_duration", "Duration (weeks)",
                   value = NA, min = 12, max = 520,
                 ),
                 numericInput(
-                  "conduct-arms", "Number of arms",
+                  "conduct_arms", "Number of arms",
                   value = 2, min = 2, max = 6,
                 ),
-                radioButtons(
-                  "conduct-sample_size", "Sample size",
-                  c("Small (<500)", "Medium (500 - 999)", "Large (>=1000)"),
-                  inline = FALSE,
-                  selected = "Small (<500)"
-                ),
                 numericInput(
-                  "conduct-est_sample", "Estimated sample size",
+                  "conduct_n", "Number of participants",
                   value = NA,
+                ),
+                strong("Trial size"),
+                textOutput("conduct_sample_size"),
+                div(style = "height: 15px;"),
+                radioButtons(
+                  "conduct_phase", "Phase",
+                  c("3", "4"),
+                  inline = TRUE,
+                  selected = "3"
                 )
               ),
               column(
                 width = 3,
                 radioButtons(
-                  "conduct-age_lower", "Lower age limits",
+                  "conduct_age_lower", "Lower age limits",
                   c("18yr", ">18yr"),
                   inline = TRUE,
                   selected = "18yr"
                 ),
                 radioButtons(
-                  "conduct-bmi_lower", "Lower bmi limits",
+                  "conduct_bmi_lower", "Lower bmi limits",
                   c("None", "<=25 kg/m2"),
                   inline = TRUE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "conduct-egfr_lower", "Lower eGFR limits",
+                  "conduct_egfr_lower", "Lower eGFR limits",
                   c("None", "<=30 ml/min/1.73m2", ">30 ml/min/1.73m2"),
                   inline = FALSE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "conduct-phase", "Phase",
-                  c("3", "4"),
-                  inline = TRUE,
-                  selected = "3"
-                ),
-                radioButtons(
-                  "conduct-n_facilities", "Number of sites",
+                  "conduct_n_facilities", "Number of sites",
                   c("<50", "50 - 99", ">=100"),
                   inline = FALSE,
                   selected = "<50"
@@ -390,31 +384,31 @@ dashboardPage(
               column(
                 width = 3,
                 radioButtons(
-                  "conduct-age_upper", "Upper age limits*",
+                  "conduct_age_upper", "Upper age limits*",
                   c("70yr", ">70yr"),
                   inline = TRUE,
                   selected = "70yr"
                 ),
                 radioButtons(
-                  "conduct-bmi_upper", "Upper bmi limits",
+                  "conduct_bmi_upper", "Upper bmi limits",
                   c("None", "<45 kg/m2"),
                   inline = TRUE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "conduct-egfr_upper", "Upper eGFR limits",
+                  "conduct_egfr_upper", "Upper eGFR limits",
                   c("None", "<=60 ml/min/1.73m2", ">60 ml/min/1.73m2"),
                   inline = FALSE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "conduct-poms", "Number of POMs",
+                  "conduct_poms", "Number of POMs",
                   c("1", ">1"),
                   inline = TRUE,
                   selected = "1"
                 ),
                 checkboxGroupInput(
-                  "conduct-trttype", "Comparators",
+                  "conduct_trttype", "Comparators",
                   c("Placebo", "Active comparator"),
                   selected = "Placebo"
                 )
@@ -422,12 +416,12 @@ dashboardPage(
               column(
                 width = 3,
                 radioButtons(
-                  "conduct-blind", "Blinding type",
+                  "conduct_blind", "Blinding type",
                   c("Open label", "Double", "Triple", "Quadruple"),
                   selected = "Open label"
                 ),
                 checkboxGroupInput(
-                  "conduct-who_reg", "WHO regions involved",
+                  "conduct_who_reg", "WHO regions involved",
                   c(
                     "African", "The Americas*",
                     "Eastern Mediterranean", "European",
@@ -455,11 +449,11 @@ dashboardPage(
               column(
                 width = 3,
                 numericInput(
-                  "conduct-age", "Age (years)*",
+                  "conduct_age", "Age (years)*",
                   value = NA, min = 18, max = 100,
                 ),
                 radioButtons(
-                  "conduct-race", "Race",
+                  "conduct_race", "Race",
                   c("Asian*", "Black/African American*", "White", "Other"),
                   selected = "White"
                 ),
@@ -492,42 +486,42 @@ dashboardPage(
               column(
                 width = 3,
                 radioButtons(
-                  "conduct-sex", "Sex*",
+                  "conduct_sex", "Sex*",
                   c("Female", "Male"),
                   inline = TRUE,
                   selected = "Female"
                 ),
                 numericInput(
-                  "conduct-t2dur", "T2DM duration (years)*",
+                  "conduct_t2dur", "T2DM duration (years)*",
                   value = NA, min = 0.01, max = 20,
                 ),
                 numericInput(
-                  "conduct-bmi", "BMI (kg/m2)",
+                  "conduct_bmi", "BMI (kg/m2)",
                   value = NA, min = 19, max = 50,
                 ),
                 numericInput(
-                  "conduct-sbp", "Systolic BP (mmHg)*",
+                  "conduct_sbp", "Systolic BP (mmHg)*",
                   value = NA, min = 60, max = 140,
                 )
               ),
               column(
                 width = 3,
                 radioButtons(
-                  "conduct-smoke", "Current smoker*",
+                  "conduct_smoke", "Current smoker*",
                   c("No", "Yes"),
                   inline = TRUE,
                   selected = "No"
                 ),
                 numericInput(
-                  "conduct-hba1c", "HbA1c (%)*",
+                  "conduct_hba1c", "HbA1c (%)*",
                   value = NA, min = 6, max = 10,
                 ),
                 numericInput(
-                  "conduct-hdl", "HDL cholesterol (mmol/L)",
+                  "conduct_hdl", "HDL cholesterol (mmol/L)",
                   value = NA, min = 1, max = 3,
                 ),
                 numericInput(
-                  "conduct-comorbs", "Comorbidities*",
+                  "conduct_comorbs", "Comorbidities*",
                   value = NA, min = 0, max = 10,
                 )
               ),
@@ -535,15 +529,15 @@ dashboardPage(
                 width = 3,
                 div(style = "height: 61px;"),
                 numericInput(
-                  "conduct-egfr", "eGFR (mmol/min/1.73m2)*",
+                  "conduct_egfr", "eGFR (mmol/min/1.73m2)*",
                   value = NA, min = 15, max = 120,
                 ),
                 numericInput(
-                  "conduct-totalc", "Total cholesterol (mmol/L)",
+                  "conduct_totalc", "Total cholesterol (mmol/L)",
                   value = NA, min = 4, max = 10,
                 ),
                 numericInput(
-                  "conduct-conmed", "Concomitant medications",
+                  "conduct_conmed", "Concomitant medications",
                   value = NA, min = 0, max = 20,
                 )
               )

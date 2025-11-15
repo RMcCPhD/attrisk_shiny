@@ -44,14 +44,10 @@ design_risk_plot <- function(design_df, top5_df = NULL, show_top5 = FALSE) {
 design_haz_plot <- function(design_df) {
   
   # Compute x and y limits
-  y_min <- min(design_df$hazard_q50)
-  y_max <- max(design_df$hazard_q50)
-  
   x_min <- min(design_df$t_wks, na.rm = TRUE)
   x_max <- max(design_df$t_wks, na.rm = TRUE)
   
   design_df %>%
-    mutate(hazard_q50 = (hazard_q50 - y_min) / (y_max - y_min)) %>% 
     ggplot(aes(x = t_wks, y = hazard_q50)) +
     geom_line() +
     labs(x = "Follow-up time (weeks)", y = "Instantaneous hazard") +

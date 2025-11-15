@@ -32,15 +32,19 @@ function(input, output, session) {
   
   # Update action buttons (disabled -> usable) based on inputs
   observe({
-    have_duration <- isTruthy(input$"design-duration")
+    have_duration <- isTruthy(input$"design_duration")
+    have_n <- isTruthy(input$"design_n")
+    have_all <- have_duration & have_n
     
     # Toggle enabled/disabled
-    shinyjs::toggleState("predict_design", condition = have_duration)
-    shinyjs::toggleState("reset_design", condition = have_duration)
+    shinyjs::toggleState("predict_design", condition = have_all)
+    shinyjs::toggleState("reset_design", condition = have_all)
     
     # Choose labels based on what input is missing (duration, sample size)
     lab_needed <- if (!have_duration) {
       "Enter duration"
+    } else if (!have_n) {
+      "Enter sample size"
     } else {
       "Predict (design)"
     }
@@ -48,21 +52,21 @@ function(input, output, session) {
     # Predict button
     updateActionButton(
       session, "predict_design",
-      label = if (have_duration) "Predict risk" else lab_needed
+      label = if (have_all) "Predict risk" else lab_needed
     )
     
     # Reset button
     updateActionButton(
       session, "reset_design",
-      label = if (have_duration) "Reset everything" else lab_needed
+      label = if (have_all) "Reset everything" else lab_needed
     )
   })
   
   # Force minimum/maximum values for numeric inputs where violated
   value_limits <- list(
-    "design-duration"   = c(12, 520),
-    "design-facilities" = c(1, 500),
-    "design-arms"       = c(2, 6)
+    "design_duration"   = c(12, 520),
+    "design_facilities" = c(1, 500),
+    "design_arms"       = c(2, 6)
   )
   
   # Clamp input if thresholds exceeded
@@ -81,58 +85,17 @@ function(input, output, session) {
     })
   })
   
-  # Assign an estimated sample size value based on sample size input
+  # Assign a sample size category based on user input for actual sample size
   # Defaults:
   # 250 (for reference - small (<500), 750 (medium (500-999), 1250 (large (>1000)))
-  
-  # Set defaults
-  sample_defaults <- list(
-    "Small (<500)"        = list(value = 250,  min = 30,   max = 499),
-    "Medium (500 - 999)"  = list(value = 750,  min = 500,  max = 999),
-    "Large (>=1000)"      = list(value = 1250, min = 1000, max = 10000)
-  )
-  
-  # Apply defaults upon app loading with reference set (small)
-  observe({
-    req(isTruthy(input$`design-sample_size`))
-    d <- sample_defaults[[input$`design-sample_size`]]
-    updateNumericInput(
-      session, "design-est_sample",
-      value = d$value, min = d$min, max = d$max
+  output$design_sample_size <- renderText({
+    val <- input$design_n
+    if (is.null(val) || is.na(val)) return("Enter number of participants")
+    case_when(
+      val < 500 ~ "Small (<500)",
+      val >= 500 & val < 1000 ~ "Medium (500 – 999)",
+      val >= 1000 ~ "Large (≥1000)"
     )
-  })
-  
-  # Update default when radio changes
-  observeEvent(input$`design-sample_size`, {
-    d <- sample_defaults[[input$`design-sample_size`]]
-    current <- isolate(input$`design-est_sample`)
-    
-    # Keep the user's value if it fits, otherwise use default
-    new_value <- if (!is.null(current) && !is.na(current) &&
-                     current >= d$min && current <= d$max) current else d$value
-    
-    updateNumericInput(
-      session, "design-est_sample",
-      value = new_value, min = d$min, max = d$max
-    )
-  })
-  
-  # Clamp user entries to bounds for each radio button
-  observeEvent(input$`design-est_sample`, {
-    d <- sample_defaults[[ input$`design-sample_size` ]]
-    val <- input$`design-est_sample`
-    
-    # If box is cleared, reset to default for radio button
-    if (is.null(val) || is.na(val) || val == "") {
-      updateNumericInput(session, "design-est_sample", value = d$value)
-      return()
-    }
-    
-    # Otherwise clamp to boundaries
-    clamped <- max(d$min, min(d$max, val))
-    if (!identical(val, clamped)) {
-      updateNumericInput(session, "design-est_sample", value = clamped)
-    }
   })
   
   # Conditions to remove outputs when reset button is pressed
@@ -235,19 +198,22 @@ function(input, output, session) {
   
   # Update action buttons (disabled -> usable) based on inputs
   observe({
-    have_duration <- isTruthy(input$"conduct-duration")
-    have_age <- isTruthy(input$"conduct-age")
-    have_both <- have_duration & have_age
+    have_duration <- isTruthy(input$"conduct_duration")
+    have_age <- isTruthy(input$"conduct_age")
+    have_n <- isTruthy(input$"conduct_n")
+    have_all <- have_duration & have_n & have_age
     
     # Toggle enabled/disabled
-    shinyjs::toggleState("predict_conduct", condition = have_both)
-    shinyjs::toggleState("reset_design2", condition = have_both)
-    shinyjs::toggleState("reset_char", condition = have_both)
-    shinyjs::toggleState("reset_conduct", condition = have_both)
+    shinyjs::toggleState("predict_conduct", condition = have_all)
+    shinyjs::toggleState("reset_design2", condition = have_all)
+    shinyjs::toggleState("reset_char", condition = have_all)
+    shinyjs::toggleState("reset_conduct", condition = have_all)
     
     # Choose labels based on what input is missing (duration, sample size)
     lab_needed <- if (!have_duration) {
       "Enter duration"
+    } else if (!have_n) {
+      "Enter sample size"
     } else if (!have_age) {
       "Enter age"
     } else {
@@ -257,40 +223,40 @@ function(input, output, session) {
     # Predict button
     updateActionButton(
       session, "predict_conduct",
-      label = if (have_both) "Predict risk" else lab_needed
+      label = if (have_all) "Predict risk" else lab_needed
     )
     
     # Reset buttons
     updateActionButton(
       session, "reset_design2",
-      label = if (have_both) "Reset design features" else lab_needed
+      label = if (have_all) "Reset design features" else lab_needed
     )
     
     updateActionButton(
       session, "reset_char",
-      label = if (have_both) "Reset characteristics" else lab_needed
+      label = if (have_all) "Reset characteristics" else lab_needed
     )
     
     updateActionButton(
       session, "reset_conduct",
-      label = if (have_both) "Reset everything" else lab_needed
+      label = if (have_all) "Reset everything" else lab_needed
     )
   })
   
   # Force minimum/maximum values for numeric inputs where violated
   conduct_value_limits <- list(
-    "conduct-duration"   = c(12, 520),
-    "conduct-arms"       = c(2, 6),
-    "conduct-age"        = c(18, 100),
-    "conduct-t2dur"      = c(0.01, 20),
-    "conduct-hba1c"      = c(6, 10),
-    "conduct-hdl"        = c(1, 3),
-    "conduct-bmi"        = c(19, 50),
-    "conduct-egfr"       = c(15, 120),
-    "conduct-sbp"        = c(60, 140),
-    "conduct-totalc"     = c(4, 10),
-    "conduct-conmed"     = c(0, 20),
-    "conduct-comorbs"    = c(0, 10)
+    "conduct_duration"   = c(12, 520),
+    "conduct_arms"       = c(2, 6),
+    "conduct_age"        = c(18, 100),
+    "conduct_t2dur"      = c(0.01, 20),
+    "conduct_hba1c"      = c(6, 10),
+    "conduct_hdl"        = c(1, 3),
+    "conduct_bmi"        = c(19, 50),
+    "conduct_egfr"       = c(15, 120),
+    "conduct_sbp"        = c(60, 140),
+    "conduct_totalc"     = c(4, 10),
+    "conduct_conmed"     = c(0, 20),
+    "conduct_comorbs"    = c(0, 10)
   )
   
   # Clamp input if thresholds exceeded
@@ -309,47 +275,17 @@ function(input, output, session) {
     })
   })
   
-  # Apply defaults upon app loading with reference set (small)
-  observe({
-    req(isTruthy(input$`conduct-sample_size`))
-    d <- sample_defaults[[input$`conduct-sample_size`]]
-    updateNumericInput(
-      session, "conduct-est_sample",
-      value = d$value, min = d$min, max = d$max
+  # Assign a sample size category based on user input for actual sample size
+  # Defaults:
+  # 250 (for reference - small (<500), 750 (medium (500-999), 1250 (large (>1000)))
+  output$conduct_sample_size <- renderText({
+    val <- input$conduct_n
+    if (is.null(val) || is.na(val)) return("Enter number of participants")
+    case_when(
+      val < 500 ~ "Small (<500)",
+      val >= 500 & val < 1000 ~ "Medium (500 – 999)",
+      val >= 1000 ~ "Large (≥1000)"
     )
-  })
-  
-  # Update default when radio changes
-  observeEvent(input$`conduct-sample_size`, {
-    d <- sample_defaults[[ input$`conduct-sample_size` ]]
-    current <- isolate(input$`conduct-est_sample`)
-    
-    # Keep the user's value if it fits, otherwise use default
-    new_value <- if (!is.null(current) && !is.na(current) &&
-                     current >= d$min && current <= d$max) current else d$value
-    
-    updateNumericInput(
-      session, "conduct-est_sample",
-      value = new_value, min = d$min, max = d$max
-    )
-  })
-  
-  # Clamp user entries to bounds for each radio button
-  observeEvent(input$`conduct-est_sample`, {
-    d <- sample_defaults[[ input$`conduct-sample_size` ]]
-    val <- input$`conduct-est_sample`
-    
-    # If box is cleared, reset to default for radio button
-    if (is.null(val) || is.na(val) || val == "") {
-      updateNumericInput(session, "conduct-est_sample", value = d$value)
-      return()
-    }
-    
-    # Otherwise clamp to boundaries
-    clamped <- max(d$min, min(d$max, val))
-    if (!identical(val, clamped)) {
-      updateNumericInput(session, "conduct-est_sample", value = clamped)
-    }
   })
   
   # Conditions to remove outputs when reset button is pressed

@@ -33,18 +33,25 @@ function(input, output, session) {
   # Update action buttons (disabled -> usable) based on inputs
   observe({
     have_duration <- isTruthy(input$"design_duration")
+    have_arms <- isTruthy(input$"design_arms")
     have_n <- isTruthy(input$"design_n")
-    have_all <- have_duration & have_n
+    have_all <- have_duration & have_arms & have_n
+    inputs_valid <- design_iv$is_valid()
+    enable_buttons <- have_all && inputs_valid
     
     # Toggle enabled/disabled
-    shinyjs::toggleState("predict_design", condition = have_all)
-    shinyjs::toggleState("reset_design", condition = have_all)
+    shinyjs::toggleState("predict_design", condition = enable_buttons)
+    shinyjs::toggleState("reset_design", condition = enable_buttons)
     
     # Choose labels based on what input is missing (duration, sample size)
     lab_needed <- if (!have_duration) {
       "Enter duration"
+    } else if (!have_arms) {
+      "Enter arms"
     } else if (!have_n) {
       "Enter sample size"
+    } else if (have_all & !inputs_valid) {
+      "Fix value(s)"
     } else {
       "Predict (design)"
     }
@@ -52,38 +59,39 @@ function(input, output, session) {
     # Predict button
     updateActionButton(
       session, "predict_design",
-      label = if (have_all) "Predict risk" else lab_needed
+      label = if (enable_buttons) "Predict risk" else lab_needed
     )
     
     # Reset button
     updateActionButton(
       session, "reset_design",
-      label = if (have_all) "Reset everything" else lab_needed
+      label = if (enable_buttons) "Reset everything" else lab_needed
     )
   })
   
-  # Force minimum/maximum values for numeric inputs where violated
-  value_limits <- list(
+  # Display warning if numeric inputs fall outside of possible range
+  design_value_limits <- list(
     "design_duration"   = c(12, 520),
     "design_facilities" = c(1, 500),
-    "design_arms"       = c(2, 6)
+    "design_arms"       = c(2, 6),
+    "design_n"          = c(100, 10000)
   )
   
-  # Clamp input if thresholds exceeded
-  lapply(names(value_limits), function(id) {
-    observeEvent(input[[id]], ignoreInit = TRUE, {
-      val <- input[[id]]
-      if (is.null(val) || is.na(val)) return(NULL)
-      low <- value_limits[[id]][1]
-      high <- value_limits[[id]][2]
-      
-      if (val < low) {
-        updateNumericInput(session, id, value = low)
-      } else if (val > high) {
-        updateNumericInput(session, id, value = high)
-      }
-    })
-  })
+  design_iv <- shinyvalidate::InputValidator$new()
+  for (id in names(design_value_limits)) {
+    lims <- design_value_limits[[id]]
+    design_iv$add_rule(
+      id,
+      shinyvalidate::sv_between(
+        lims[1], lims[2],
+        allow_na = TRUE,
+        message_fmt = paste0("Enter a value between ", lims[1], " and ", lims[2]
+      )
+      )
+    )
+  }
+  
+  design_iv$enable()
   
   # Assign a sample size category based on user input for actual sample size
   # Defaults:
@@ -198,24 +206,33 @@ function(input, output, session) {
   
   # Update action buttons (disabled -> usable) based on inputs
   observe({
+    
+    # Conditions
     have_duration <- isTruthy(input$"conduct_duration")
-    have_age <- isTruthy(input$"conduct_age")
+    have_arms <- isTruthy(input$"conduct_arms")
     have_n <- isTruthy(input$"conduct_n")
-    have_all <- have_duration & have_n & have_age
+    have_age <- isTruthy(input$"conduct_age")
+    have_all <- have_duration & have_arms & have_n & have_age
+    inputs_valid <- conduct_iv$is_valid()
+    enable_buttons <- have_all && inputs_valid
     
     # Toggle enabled/disabled
-    shinyjs::toggleState("predict_conduct", condition = have_all)
-    shinyjs::toggleState("reset_design2", condition = have_all)
-    shinyjs::toggleState("reset_char", condition = have_all)
-    shinyjs::toggleState("reset_conduct", condition = have_all)
+    shinyjs::toggleState("predict_conduct", condition = enable_buttons)
+    shinyjs::toggleState("reset_design2", condition = enable_buttons)
+    shinyjs::toggleState("reset_char", condition = enable_buttons)
+    shinyjs::toggleState("reset_conduct", condition = enable_buttons)
     
     # Choose labels based on what input is missing (duration, sample size)
     lab_needed <- if (!have_duration) {
       "Enter duration"
     } else if (!have_n) {
       "Enter sample size"
+    } else if (!have_arms) {
+      "Enter arms"
     } else if (!have_age) {
       "Enter age"
+    } else if (have_all & !inputs_valid) {
+      "Fix value(s)"
     } else {
       "Predict risk"
     }
@@ -223,57 +240,58 @@ function(input, output, session) {
     # Predict button
     updateActionButton(
       session, "predict_conduct",
-      label = if (have_all) "Predict risk" else lab_needed
+      label = if (enable_buttons) "Predict risk" else lab_needed
     )
     
     # Reset buttons
     updateActionButton(
       session, "reset_design2",
-      label = if (have_all) "Reset design features" else lab_needed
+      label = if (enable_buttons) "Reset design features" else lab_needed
     )
     
     updateActionButton(
       session, "reset_char",
-      label = if (have_all) "Reset characteristics" else lab_needed
+      label = if (enable_buttons) "Reset characteristics" else lab_needed
     )
     
     updateActionButton(
       session, "reset_conduct",
-      label = if (have_all) "Reset everything" else lab_needed
+      label = if (enable_buttons) "Reset everything" else lab_needed
     )
   })
   
-  # Force minimum/maximum values for numeric inputs where violated
+  # Display warning if numeric inputs fall outside of possible range
   conduct_value_limits <- list(
     "conduct_duration"   = c(12, 520),
     "conduct_arms"       = c(2, 6),
+    "conduct_n"          = c(100, 10000),
     "conduct_age"        = c(18, 100),
     "conduct_t2dur"      = c(0.01, 20),
     "conduct_hba1c"      = c(6, 10),
-    "conduct_hdl"        = c(1, 3),
-    "conduct_bmi"        = c(19, 50),
+    "conduct_hdl"        = c(1, 4),
+    "conduct_bmi"        = c(18, 50),
     "conduct_egfr"       = c(15, 120),
-    "conduct_sbp"        = c(60, 140),
+    "conduct_sbp"        = c(90, 200),
     "conduct_totalc"     = c(4, 10),
     "conduct_conmed"     = c(0, 20),
     "conduct_comorbs"    = c(0, 10)
   )
   
-  # Clamp input if thresholds exceeded
-  lapply(names(conduct_value_limits), function(id) {
-    observeEvent(input[[id]], ignoreInit = TRUE, {
-      val <- input[[id]]
-      if (is.null(val) || is.na(val)) return(NULL)
-      low <- conduct_value_limits[[id]][1]
-      high <- conduct_value_limits[[id]][2]
-
-      if (val < low) {
-        updateNumericInput(session, id, value = low)
-      } else if (val > high) {
-        updateNumericInput(session, id, value = high)
-      }
-    })
-  })
+  conduct_iv <- shinyvalidate::InputValidator$new()
+  for (id in names(conduct_value_limits)) {
+    lims <- conduct_value_limits[[id]]
+    conduct_iv$add_rule(
+      id,
+      shinyvalidate::sv_between(
+        lims[1], lims[2],
+        allow_na = TRUE,
+        message_fmt = paste0("Enter a value between ", lims[1], " and ", lims[2]
+        )
+      )
+    )
+  }
+  
+  conduct_iv$enable()
   
   # Assign a sample size category based on user input for actual sample size
   # Defaults:

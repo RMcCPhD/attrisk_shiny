@@ -185,7 +185,7 @@ dashboardPage(
                 ),
                 numericInput(
                   "design_arms", "Number of arms",
-                  value = 2, min = 2, max = 6,
+                  value = NA, min = 2, max = 6,
                 ),
                 numericInput(
                   "design_n", "Number of participants",
@@ -338,7 +338,7 @@ dashboardPage(
                 ),
                 numericInput(
                   "conduct_arms", "Number of arms",
-                  value = 2, min = 2, max = 6,
+                  value = NA, min = 2, max = 6,
                 ),
                 numericInput(
                   "conduct_n", "Number of participants",

@@ -1,4 +1,11 @@
 
+# Gather conduct calibration objects once at startup
+conduct_delta_draws <- readRDS("www/data/delta_draws.rds")
+conduct_sobol <- readRDS("www/data/sobol_lst.rds")
+conduct_delta_mu <- rowMeans(conduct_delta_draws)
+conduct_char_names <- tibble(param = colnames(conduct_sobol$Z))
+conduct_loghrs <- tibble(param = names(conduct_sobol$loghr), logHR = conduct_sobol$loghr)
+
 # Get calibrated log-rate (adjusted for participant risk profile)
 predict_conduct <- function(tidy_inputs_conduct, conduct_inputs) {
   reactive({
@@ -7,22 +14,11 @@ predict_conduct <- function(tidy_inputs_conduct, conduct_inputs) {
     tidy_out <- tidy_inputs_conduct()
     input_param <- conduct_inputs()
     
-    # Gather inputs necessary for CITL
-    imp_deltas <- readRDS("www/data/delta_draws.rds") # Delta draws
-    imp_hr <- readRDS("www/data/sobol_lst.rds")       # Sobol data (i.e. logHR)
-    
-    # Get posterior mean for delta
-    delta_mu <- rowMeans(imp_deltas)
-    
-    # Create characteristics map and logHR tibble
-    char_nms <- tibble(param = colnames(imp_hr$Z))
-    logHRs <- tibble(param = names(imp_hr$loghr), logHR = imp_hr$loghr)
-    
     # Build linear predictor using user characteristic inputs
-    input_lp <- char_nms %>%
+    input_lp <- conduct_char_names %>%
       inner_join(select(input_param, param, value_prep)) %>%
       mutate(value_prep = as.numeric(value_prep)) %>%
-      left_join(logHRs)
+      left_join(conduct_loghrs)
     
     lp <- input_lp %>% 
       mutate(lp = value_prep * logHR) %>%
@@ -35,7 +31,7 @@ predict_conduct <- function(tidy_inputs_conduct, conduct_inputs) {
     
     # Build new log-rate and rate per draw
     log_rate <- tidy_out$log_rate                    # Log-rate (uncalibrated)
-    log_rate_citl <- log_rate + delta_mu + lp        # Log-rate (calibrated)
+    log_rate_citl <- log_rate + conduct_delta_mu + lp # Log-rate (calibrated)
     rate_citl <- exp(log_rate_citl)                  # Rate (calibrated)
     shape <- tidy_out$shape                          # Shape (unchanged)
 

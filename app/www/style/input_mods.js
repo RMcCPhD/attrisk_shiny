@@ -5,12 +5,10 @@
   const PLACEHOLDERS = {
   // design
   'design_duration':   '12 - 520',
-  'design_facilities': '1 - 500',
   'design_arms':       '2 - 6',
   'design_n':          '100 - 10,000',
   // conduct
   'conduct_duration':   '12 - 520',
-  'conduct_facilities': '1 - 500',
   'conduct_arms':       '2 - 6',
   'conduct_n':          '100 - 10,000',
   'conduct_age':        '18 - 100',
@@ -21,7 +19,7 @@
   'conduct_t2dur':      '0.01 - 20',
   'conduct_hba1c':      '6 - 10',
   'conduct_egfr':       '15 - 120',
-  'conduct_conmed':     '0 - 10',
+  'conduct_conmed':     '0 - 20',
   'conduct_comorbs':    '0 - 10'
   };
 
@@ -38,11 +36,7 @@
     applyPlaceholders(PLACEHOLDERS);
   });
   
-  // Reset user inputs upon restart button activation
-  // Design box
-  if (!window.__resetBoxRegistered) {
-    window.__resetBoxRegistered = true;
-    Shiny.addCustomMessageHandler('resetBox', function(id) {
+  function resetInputs(id) {
       const box = document.getElementById(id);
       if (!box) return;
       const inputs = box.querySelectorAll('input, select, textarea');
@@ -54,42 +48,15 @@
         }
         el.dispatchEvent(new Event('change', { bubbles: true }));
       });
-    });
   }
   
-  // Design box (conduct page)
-  if (!window.__resetBox2Registered) {
-    window.__resetBox2Registered = true;
-    Shiny.addCustomMessageHandler('resetBox2', function(id) {
-      const box = document.getElementById(id);
-      if (!box) return;
-      const inputs = box.querySelectorAll('input, select, textarea');
-      inputs.forEach(el => {
-        if (el.type === 'checkbox' || el.type === 'radio') {
-          el.checked = el.defaultChecked;
-        } else {
-          el.value = el.defaultValue;
-        }
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-    });
+  function registerResetHandler(name) {
+    const key = '__' + name + 'Registered';
+    if (window[key]) return;
+    window[key] = true;
+    Shiny.addCustomMessageHandler(name, resetInputs);
   }
   
-  // Baseline characteristics
-  if (!window.__resetBox3Registered) {
-    window.__resetBox3Registered = true;
-    Shiny.addCustomMessageHandler('resetBox3', function(id) {
-      const box = document.getElementById(id);
-      if (!box) return;
-      const inputs = box.querySelectorAll('input, select, textarea');
-      inputs.forEach(el => {
-        if (el.type === 'checkbox' || el.type === 'radio') {
-          el.checked = el.defaultChecked;
-        } else {
-          el.value = el.defaultValue;
-        }
-        el.dispatchEvent(new Event('change', { bubbles: true }));
-      });
-    });
-  }
+  // Reset user inputs upon reset button activation
+  ['resetBox', 'resetBox2', 'resetBox3'].forEach(registerResetHandler);
 })();

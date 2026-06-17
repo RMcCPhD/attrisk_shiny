@@ -63,7 +63,7 @@ colnms <- colnames(draws_mat)
 
 # Helper: Get draws matrix columns safely
 get_mat_cols <- function(rx) {
-  cols <- grep(rx, coln, value = TRUE)
+  cols <- grep(rx, colnms, value = TRUE)
   if (length(cols) == 0) stop("No columns matched: ", rx)
   draws_mat[, cols, drop = FALSE]
 }

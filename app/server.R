@@ -5,6 +5,32 @@ library(tidyverse)
 library(posterior)
 library(DT)
 
+make_input_validator <- function(value_limits) {
+  iv <- shinyvalidate::InputValidator$new()
+  for (id in names(value_limits)) {
+    lims <- value_limits[[id]]
+    iv$add_rule(
+      id,
+      shinyvalidate::sv_between(
+        lims[1], lims[2],
+        allow_na = TRUE,
+        message_fmt = paste0("Enter a value between ", lims[1], " and ", lims[2])
+      )
+    )
+  }
+  iv$enable()
+  iv
+}
+
+sample_size_label <- function(val) {
+  if (is.null(val) || is.na(val)) return("Enter number of participants")
+  case_when(
+    val < 500 ~ "Small (<500)",
+    val >= 500 & val < 1000 ~ "Medium (500-999)",
+    val >= 1000 ~ "Large (>=1000)"
+  )
+}
+
 # Define server logic
 function(input, output, session) {
   
@@ -27,6 +53,34 @@ function(input, output, session) {
       html = TRUE
     )
   }, once = TRUE)
+
+  # Numeric input validation ---------------------------------------------------
+
+  design_iv <- make_input_validator(
+    list(
+      "design_duration" = c(12, 520),
+      "design_arms"     = c(2, 6),
+      "design_n"        = c(100, 10000)
+    )
+  )
+
+  conduct_iv <- make_input_validator(
+    list(
+      "conduct_duration" = c(12, 520),
+      "conduct_arms"     = c(2, 6),
+      "conduct_n"        = c(100, 10000),
+      "conduct_age"      = c(18, 100),
+      "conduct_t2dur"    = c(0.01, 20),
+      "conduct_hba1c"    = c(6, 10),
+      "conduct_hdl"      = c(1, 4),
+      "conduct_bmi"      = c(18, 50),
+      "conduct_egfr"     = c(15, 120),
+      "conduct_sbp"      = c(90, 200),
+      "conduct_totalc"   = c(4, 10),
+      "conduct_conmed"   = c(0, 20),
+      "conduct_comorbs"  = c(0, 10)
+    )
+  )
 
   # Design page conditions -----------------------------------------------------
   

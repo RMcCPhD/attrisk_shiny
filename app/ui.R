@@ -210,14 +210,14 @@ dashboardPage(
                   selected = "18yr"
                 ),
                 radioButtons(
-                  "design_bmi_lower", "Lower bmi limits",
-                  c("None", "<=25 kg/m2"),
+                  "design_bmi_lower", "Lower BMI limits",
+                  c("None", "<=27 kg/m2"),
                   inline = TRUE,
                   selected = "None"
                 ),
                 radioButtons(
                   "design_egfr_lower", "Lower eGFR limits",
-                  c("None", "<=30 ml/min/1.73m2", ">30 ml/min/1.73m2"),
+                  c("None", "<=30 ml/min/1.73m2", ">60 ml/min/1.73m2"),
                   inline = FALSE,
                   selected = "None"
                 ),
@@ -232,24 +232,18 @@ dashboardPage(
                 width = 3,
                 radioButtons(
                   "design_age_upper", "Upper age limits*",
-                  c("70yr", ">70yr"),
+                  c("<=80yr", ">80yr"),
                   inline = TRUE,
-                  selected = "70yr"
+                  selected = "<=80yr"
                 ),
                 radioButtons(
-                  "design_bmi_upper", "Upper bmi limits",
-                  c("None", "<45 kg/m2"),
+                  "design_bmi_upper", "Upper BMI limits",
+                  c("None", ">30 kg/m2", ">40kg/m2"),
                   inline = TRUE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "design_egfr_upper", "Upper eGFR limits",
-                  c("None", "<=60 ml/min/1.73m2", ">60 ml/min/1.73m2"),
-                  inline = FALSE,
-                  selected = "None"
-                ),
-                radioButtons(
-                  "design_poms", "Number of POMs",
+                  "design_poms", "Number of primary outcomes",
                   c("1", ">1"),
                   inline = TRUE,
                   selected = "1"
@@ -272,7 +266,7 @@ dashboardPage(
                   c(
                     "African", "The Americas*",
                     "Eastern Mediterranean", "European",
-                    "SE Asian", "Western Pacific"
+                    "Southeast Asian", "Western Pacific"
                   )
                 ),
                 actionButton(
@@ -363,14 +357,14 @@ dashboardPage(
                   selected = "18yr"
                 ),
                 radioButtons(
-                  "conduct_bmi_lower", "Lower bmi limits",
-                  c("None", "<=25 kg/m2"),
+                  "conduct_bmi_lower", "Lower BMI limits",
+                  c("None", "<=27 kg/m2"),
                   inline = TRUE,
                   selected = "None"
                 ),
                 radioButtons(
                   "conduct_egfr_lower", "Lower eGFR limits",
-                  c("None", "<=30 ml/min/1.73m2", ">30 ml/min/1.73m2"),
+                  c("None", "<=30 ml/min/1.73m2", ">60 ml/min/1.73m2"),
                   inline = FALSE,
                   selected = "None"
                 ),
@@ -385,24 +379,18 @@ dashboardPage(
                 width = 3,
                 radioButtons(
                   "conduct_age_upper", "Upper age limits*",
-                  c("70yr", ">70yr"),
+                  c("<=80yr", ">80yr"),
                   inline = TRUE,
-                  selected = "70yr"
+                  selected = "<=80yr"
                 ),
                 radioButtons(
-                  "conduct_bmi_upper", "Upper bmi limits",
-                  c("None", "<45 kg/m2"),
+                  "conduct_bmi_upper", "Upper BMI limits",
+                  c("None", ">30 kg/m2", ">40kg/m2"),
                   inline = TRUE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "conduct_egfr_upper", "Upper eGFR limits",
-                  c("None", "<=60 ml/min/1.73m2", ">60 ml/min/1.73m2"),
-                  inline = FALSE,
-                  selected = "None"
-                ),
-                radioButtons(
-                  "conduct_poms", "Number of POMs",
+                  "conduct_poms", "Number of primary outcomes",
                   c("1", ">1"),
                   inline = TRUE,
                   selected = "1"
@@ -454,7 +442,7 @@ dashboardPage(
                 ),
                 radioButtons(
                   "conduct_race", "Race",
-                  c("Asian*", "Black/African American*", "White", "Other"),
+                  c("Asian", "Black/African American*", "White", "Other"),
                   selected = "White"
                 ),
                 div(style = "height: 15px;"),

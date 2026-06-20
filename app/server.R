@@ -25,9 +25,11 @@ make_input_validator <- function(value_limits) {
 sample_size_label <- function(val) {
   if (is.null(val) || is.na(val)) return("Enter number of participants")
   case_when(
-    val < 500 ~ "Small (<500)",
-    val >= 500 & val < 1000 ~ "Medium (500-999)",
-    val >= 1000 ~ "Large (>=1000)"
+    val < 250 ~ "<250",
+    val >= 250 & val < 500 ~ "250-499",
+    val >= 500 & val < 750 ~ "500-749",
+    val >= 750 & val < 1000 ~ "750-999",
+    val >= 1000 ~ ">=1000"
   )
 }
 
@@ -126,7 +128,6 @@ function(input, output, session) {
   # Display warning if numeric inputs fall outside of possible range
   design_value_limits <- list(
     "design_duration"   = c(12, 520),
-    "design_facilities" = c(1, 500),
     "design_arms"       = c(2, 6),
     "design_n"          = c(100, 10000)
   )
@@ -147,17 +148,9 @@ function(input, output, session) {
   
   design_iv$enable()
   
-  # Assign a sample size category based on user input for actual sample size
-  # Defaults:
-  # 250 (for reference - small (<500), 750 (medium (500-999), 1250 (large (>1000)))
+  # Assign a trial-size category based on the exported model bins.
   output$design_sample_size <- renderText({
-    val <- input$design_n
-    if (is.null(val) || is.na(val)) return("Enter number of participants")
-    case_when(
-      val < 500 ~ "Small (<500)",
-      val >= 500 & val < 1000 ~ "Medium (500 – 999)",
-      val >= 1000 ~ "Large (≥1000)"
-    )
+    sample_size_label(input$design_n)
   })
   
   # Conditions to remove outputs when reset button is pressed
@@ -347,17 +340,9 @@ function(input, output, session) {
   
   conduct_iv$enable()
   
-  # Assign a sample size category based on user input for actual sample size
-  # Defaults:
-  # 250 (for reference - small (<500), 750 (medium (500-999), 1250 (large (>1000)))
+  # Assign a trial-size category based on the exported model bins.
   output$conduct_sample_size <- renderText({
-    val <- input$conduct_n
-    if (is.null(val) || is.na(val)) return("Enter number of participants")
-    case_when(
-      val < 500 ~ "Small (<500)",
-      val >= 500 & val < 1000 ~ "Medium (500 – 999)",
-      val >= 1000 ~ "Large (≥1000)"
-    )
+    sample_size_label(input$conduct_n)
   })
   
   # Conditions to remove outputs when reset button is pressed

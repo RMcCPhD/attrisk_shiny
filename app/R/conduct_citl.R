@@ -1,74 +1,33 @@
+# Get calibrated log-rate adjusted for the participant risk profile.
 
-# Gather conduct calibration objects once at startup
-conduct_delta_draws <- readRDS("www/data/delta_draws.rds")
-conduct_sobol <- readRDS("www/data/sobol_lst.rds")
-conduct_delta_mu <- rowMeans(conduct_delta_draws)
-conduct_char_names <- tibble(param = colnames(conduct_sobol$Z))
-conduct_loghrs <- tibble(param = names(conduct_sobol$loghr), logHR = conduct_sobol$loghr)
-
-# Get calibrated log-rate (adjusted for participant risk profile)
 predict_conduct <- function(tidy_inputs_conduct, conduct_inputs) {
   reactive({
-    
-    # Gather inputs from previous reactive functions
     tidy_out <- tidy_inputs_conduct()
     input_param <- conduct_inputs()
     
-    # Build linear predictor using user characteristic inputs
-    input_lp <- conduct_char_names %>%
-      inner_join(select(input_param, param, value_prep)) %>%
-      mutate(value_prep = as.numeric(value_prep)) %>%
-      left_join(conduct_loghrs)
+    input_lp <- input_param %>%
+      filter(.data$role == "model", .data$param %in% attrisk_conduct_terms) %>%
+      transmute(
+        param = .data$param,
+        value_prep = suppressWarnings(as.numeric(.data$value_prep))
+      ) %>%
+      right_join(attrisk_conduct_loghrs, by = "param") %>%
+      mutate(value_prep = replace_na(.data$value_prep, 0))
     
-    lp <- input_lp %>% 
-      mutate(lp = value_prep * logHR) %>%
-      reframe(lp = sum(lp)) %>%
+    lp <- input_lp %>%
+      summarise(lp = sum(.data$value_prep * .data$logHR, na.rm = TRUE)) %>%
       pull(lp)
     
-    # Get duration
-    input_dur <- input_param %>% filter(param == "duration") %>% pull(value_prep)
-    input_dur <- as.numeric(input_dur)
+    log_rate <- tidy_out$log_rate
+    shape <- tidy_out$shape
     
-    # Build new log-rate and rate per draw
-    log_rate <- tidy_out$log_rate                    # Log-rate (uncalibrated)
-    log_rate_citl <- log_rate + conduct_delta_mu + lp # Log-rate (calibrated)
-    rate_citl <- exp(log_rate_citl)                  # Rate (calibrated)
-    shape <- tidy_out$shape                          # Shape (unchanged)
+    log_rate_citl <- log_rate + attrisk_delta_mu + lp
 
-    # Create time grid (in weeks)
-    t_max_yrs <- input_dur
-    t_yrs <- seq(0, t_max_yrs, length.out = 53)
-    t_wks <- t_yrs * 52
-
-    # Cumulative distribution (i.e. risk)
-    phaz <- vapply(
-      t_yrs,
-      function(tt) flexsurv::pgompertz(tt, shape = shape, rate = rate_citl),
-      numeric(length(rate_citl))
-    )
-
-    # Time-to-event
-    t2e <- 1 - phaz
-
-    # Quantiles
-    rq <- qfun(phaz)
-    t2eq <- qfun(t2e)
-
-    # Counts (if inputted by user)
-    N_input <- filter(input_param, param == "n") %>% pull(value_prep)
-    N <- as.numeric(N_input)
-
-    # Completer/Dropout estimates (using estimated sample)
-    cCount <- N * phaz
-    atRisk <- N * t2e
-    ccq <- qfun(cCount)
-    arq <- qfun(atRisk)
-
-    # Summarise in tibble
-    sum_tbl <- tibble(
-      t_yrs = t_yrs, t_wks = t_wks,
-      compl_q50 = arq$md, drp_q50 = N - compl_q50,
-      risk_q025 = rq$lo, risk_q50 = rq$md, risk_q975 = rq$hi
+    attrisk_prediction_table(
+      log_rate = log_rate_citl,
+      shape = shape,
+      input_param = input_param,
+      include_hazard = FALSE
     )
   })
 }

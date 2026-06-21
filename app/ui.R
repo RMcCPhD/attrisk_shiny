@@ -211,21 +211,21 @@ dashboardPage(
                 ),
                 radioButtons(
                   "design_bmi_lower", "Lower BMI limits",
-                  c("None", "<=27 kg/m2"),
+                  c("None", "<27 kg/m2"),
                   inline = TRUE,
                   selected = "None"
                 ),
                 radioButtons(
                   "design_egfr_lower", "Lower eGFR limits",
-                  c("None", "<=30 ml/min/1.73m2", ">60 ml/min/1.73m2"),
+                  c("None", "<=30 ml/min/1.73m2", "<=60 ml/min/1.73m2"),
                   inline = FALSE,
                   selected = "None"
                 ),
                 radioButtons(
                   "design_n_facilities", "Number of sites",
-                  c("<50", "50 - 99", ">=100"),
+                  c("<100", "100 - 199", ">=200"),
                   inline = FALSE,
-                  selected = "<50"
+                  selected = "<100"
                 )
               ),
               column(
@@ -239,11 +239,11 @@ dashboardPage(
                 radioButtons(
                   "design_bmi_upper", "Upper BMI limits",
                   c("None", ">30 kg/m2", ">40kg/m2"),
-                  inline = TRUE,
+                  inline = FALSE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "design_poms", "Number of primary outcomes",
+                  "design_poms", "Primary outcomes",
                   c("1", ">1"),
                   inline = TRUE,
                   selected = "1"
@@ -358,21 +358,21 @@ dashboardPage(
                 ),
                 radioButtons(
                   "conduct_bmi_lower", "Lower BMI limits",
-                  c("None", "<=27 kg/m2"),
+                  c("None", "<27 kg/m2"),
                   inline = TRUE,
                   selected = "None"
                 ),
                 radioButtons(
                   "conduct_egfr_lower", "Lower eGFR limits",
-                  c("None", "<=30 ml/min/1.73m2", ">60 ml/min/1.73m2"),
+                  c("None", "<=30 ml/min/1.73m2", "<=60 ml/min/1.73m2"),
                   inline = FALSE,
                   selected = "None"
                 ),
                 radioButtons(
                   "conduct_n_facilities", "Number of sites",
-                  c("<50", "50 - 99", ">=100"),
+                  c("<100", "100 - 199", ">=200"),
                   inline = FALSE,
-                  selected = "<50"
+                  selected = "<100"
                 )
               ),
               column(
@@ -386,11 +386,11 @@ dashboardPage(
                 radioButtons(
                   "conduct_bmi_upper", "Upper BMI limits",
                   c("None", ">30 kg/m2", ">40kg/m2"),
-                  inline = TRUE,
+                  inline = FALSE,
                   selected = "None"
                 ),
                 radioButtons(
-                  "conduct_poms", "Number of primary outcomes",
+                  "conduct_poms", "Primary outcomes",
                   c("1", ">1"),
                   inline = TRUE,
                   selected = "1"
@@ -413,7 +413,7 @@ dashboardPage(
                   c(
                     "African", "The Americas*",
                     "Eastern Mediterranean", "European",
-                    "SE Asian", "Western Pacific"
+                    "Southeast Asian", "Western Pacific"
                   )
                 ),
                 div(style = "height: 4px;"),
@@ -485,11 +485,11 @@ dashboardPage(
                 ),
                 numericInput(
                   "conduct_bmi", "BMI (kg/m2)",
-                  value = NA, min = 19, max = 50,
+                  value = NA, min = 18, max = 50,
                 ),
                 numericInput(
                   "conduct_sbp", "Systolic BP (mmHg)*",
-                  value = NA, min = 60, max = 140,
+                  value = NA, min = 90, max = 200,
                 )
               ),
               column(
@@ -506,7 +506,7 @@ dashboardPage(
                 ),
                 numericInput(
                   "conduct_hdl", "HDL cholesterol (mmol/L)",
-                  value = NA, min = 1, max = 3,
+                  value = NA, min = 1, max = 4,
                 ),
                 numericInput(
                   "conduct_comorbs", "Comorbidities*",
@@ -517,7 +517,7 @@ dashboardPage(
                 width = 3,
                 div(style = "height: 61px;"),
                 numericInput(
-                  "conduct_egfr", "eGFR (mmol/min/1.73m2)*",
+                  "conduct_egfr", "eGFR (ml/min/1.73m2)*",
                   value = NA, min = 15, max = 120,
                 ),
                 numericInput(

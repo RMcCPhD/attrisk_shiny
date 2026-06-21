@@ -1,6 +1,8 @@
 
-# Generate summary table (DT)
+# Build the conduct-stage summary table shown in the app and saved to CSV.
 conduct_sum <- function(conduct_df) {
+  # Match the design table structure so both app stages use the same output
+  # columns and formatting.
   df <- conduct_df %>%
     select(t_wks, compl_q50, drp_q50, contains(c("surv", "risk"))) %>% 
     mutate(
@@ -35,5 +37,6 @@ conduct_sum <- function(conduct_df) {
     )
   )
   
+  # Return both the raw table for file export and the DT widget for Shiny.
   return(list(df = df, dt = tbl))
 }

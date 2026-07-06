@@ -15,10 +15,7 @@ dashboardPage(
       # User guide menu --------------------------------------------------------
       
       menuItem(
-        "User guide", tabName = "guide", icon = icon("book"),
-        # Guides
-        menuSubItem("Trial design", "guide_design", icon = icon("square-caret-right")),
-        menuSubItem("Trial conduct", "guide_conduct", icon = icon("square-caret-right"))
+        "User guide", tabName = "guide", icon = icon("book")
       ),
       
       # Design menu ------------------------------------------------------------
@@ -104,64 +101,18 @@ dashboardPage(
       
       # User guide -------------------------------------------------------------
       
-      # Design
       tabItem(
-        tabName = "guide_design",
-        h2(tags$b("User guide: Trial design")),
-        tabBox(
-          id = "design_guide_tabs",
-          width = 1000,
-          tabPanel(
-            "Overview",
-            div(
-              style = "max-width: 1000px; font-size: 20px;",
-              includeHTML("www/mkdown/design_overview.html")
-            )
-          ),
-          tabPanel(
-            "Functionality",
-            div(
-              style = "max-width: 1000px; font-size: 20px;",
-              includeHTML("www/mkdown/design_func.html")
-            )
-          ),
-          tabPanel(
-            "Example",
-            div(
-              style = "max-width: 1000px; font-size: 20px;",
-              includeHTML("www/mkdown/design_egs.html")
-            )
-          )
-        )
-      ),
-      
-      # Conduct
-      tabItem(
-        tabName = "guide_conduct",
-        h2(tags$b("User guide: Trial conduct")),
-        tabBox(
-          id = "conduct_guide_tabs",
-          width = 1000,
-          tabPanel(
-            "Overview",
-            div(
-              style = "max-width: 1000px; font-size: 20px;",
-              includeHTML("www/mkdown/conduct_overview.html")
-            )
-          ),
-          tabPanel(
-            "Functionality",
-            div(
-              style = "max-width: 1000px; font-size: 20px;",
-              includeHTML("www/mkdown/conduct_func.html")
-            )
-          ),
-          tabPanel(
-            "Example",
-            div(
-              style = "max-width: 1000px; font-size: 20px;",
-              includeHTML("www/mkdown/conduct_egs.html")
-            )
+        tabName = "guide",
+        h2(tags$b("User guide")),
+        tags$iframe(
+          src = "docs/AttRisk.pdf",
+          title = "AttRisk user guide",
+          style = paste(
+            "width: 100%;",
+            "height: calc(100vh - 170px);",
+            "min-height: 720px;",
+            "border: 1px solid #d2d6de;",
+            "background: #fff;"
           )
         )
       ),

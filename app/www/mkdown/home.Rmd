@@ -19,7 +19,7 @@ For each stage users can do the following:
 
 -   **Home** - Welcome page
 
--   **User guide** - Guides for using AttRisk
+-   **User guide** - Guide for using AttRisk
 
 -   **Trial design** - Predict attrition risk during trial design
 
@@ -29,4 +29,4 @@ For each stage users can do the following:
 
 <br>
 
-To get started, we recommend first exploring the **User guide**, which provides an overview of the interface, inputs, interpreting outputs and example use cases for each stage.
+To get started, we recommend first exploring the **User guide**, which provides an overview of the interface, inputs, interpreting outputs and example use cases.

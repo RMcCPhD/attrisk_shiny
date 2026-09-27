@@ -1,5 +1,0 @@
-To predict risk of attrition for trial design, select inputs from "Trial design features" and press the "Predict (design)" button in the "Trial design features" box.
-
-To predict risk of attrition for trial conduct, select inputs from both "Trial design features" and "Participant baseline characteristics", and then press the "Predict (conduct)" button in the "Participant baseline characteristics" box.
-
-The reset buttons in each box will clear all current inputs. Alternatively, individual inputs can be changed before predicting risk of attrition.

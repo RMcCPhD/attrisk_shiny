@@ -1,10 +1,7 @@
 
-# Plot conduct-stage risk predictions.
-# Conduct output currently displays risk only; instantaneous hazard remains a
-# design-stage diagnostic.
+# Plot conduct-stage risk predictions
 conduct_risk_plot <- function(conduct_df) {
   
-  # Convert risk to percentages and derive stable axes from the prediction grid.
   y_min <- min(round(conduct_df$risk_q025 * 100, 2), na.rm = TRUE)
   y_max <- max(round(conduct_df$risk_q975 * 100, 2), na.rm = TRUE)
   

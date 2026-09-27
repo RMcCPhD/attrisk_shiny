@@ -57,8 +57,8 @@ trials <- agd$format_covars[[1]]
 saveRDS(trials, file.path(app_data_dir, "trials.rds"))
 
 copy_required(
-  file.path(attrisk_dir, "processed_data", "shape_rate.rds"),
-  file.path(app_data_dir, "shape_rate.rds")
+  file.path(attrisk_dir, "processed_data", "shape_rate_design.rds"),
+  file.path(app_data_dir, "shape_rate_design.rds")
 )
 
 copy_required(
@@ -67,8 +67,8 @@ copy_required(
 )
 
 copy_required(
-  file.path(attrisk_dir, "processed_data", "sobol_lst.rds"),
-  file.path(app_data_dir, "sobol_lst.rds")
+  file.path(attrisk_dir, "processed_data", "sobol_lst_mi.rds"),
+  file.path(app_data_dir, "sobol_lst_mi.rds")
 )
 
 copy_required(
@@ -80,9 +80,9 @@ exported <- c(
   design_draws = design_draws_path,
   design_df = file.path(app_data_dir, "design_df.rds"),
   trials = file.path(app_data_dir, "trials.rds"),
-  shape_rate = file.path(app_data_dir, "shape_rate.rds"),
+  shape_rate = file.path(app_data_dir, "shape_rate_design.rds"),
   delta_draws = file.path(app_data_dir, "delta_draws.rds"),
-  sobol_lst = file.path(app_data_dir, "sobol_lst.rds"),
+  sobol_lst = file.path(app_data_dir, "sobol_lst_mi.rds"),
   conduct_scale = file.path(app_data_dir, "conduct_scale.csv")
 )
 

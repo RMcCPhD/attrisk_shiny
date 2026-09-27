@@ -1,11 +1,9 @@
 
-# Find the five trials most similar to the user-entered design.
+# Find the five trials most similar to the user-entered design
 predict_top5 <- function(design_inputs, input_flag) {
   reactive({
     shiny::req(isTRUE(input_flag()))
     
-    # Start from the exported model matrix so similarity is computed on the
-    # same encoded design covariates used by the prediction model.
     X <- attrisk_design_df$X
     targets <- colnames(X)
     
@@ -20,8 +18,6 @@ predict_top5 <- function(design_inputs, input_flag) {
     user_x <- attrisk_model_values(input_param, targets)
     user_duration <- attrisk_input_value(input_param, "duration")
     
-    # Append the user's hypothetical trial as one extra row before computing
-    # distances to the historical trials.
     user_row <- as_tibble_row(as.list(user_x)) %>%
       mutate(
         trial_id = "user",
@@ -33,7 +29,6 @@ predict_top5 <- function(design_inputs, input_flag) {
     X_all <- bind_rows(X_sel, user_row)
     
     # Give slightly more influence to clinically important design dimensions
-    # when ranking nearest neighbours.
     wts <- rep(1, ncol(X_all) - 1)
     names(wts) <- colnames(X_all)[-1]
     wts["duration"] <- 1.5
@@ -46,8 +41,7 @@ predict_top5 <- function(design_inputs, input_flag) {
       asymm = which(grepl("region|trttype|masking", names(wts)))
     )
     
-    # Gower distance handles the mix of binary indicators and continuous
-    # duration in the encoded trial-design matrix.
+    # Gower distance handles the mix of binary indicators and duration
     gower_mat <- cluster::daisy(
       X_all[, -1],
       metric = "gower",
@@ -60,8 +54,7 @@ predict_top5 <- function(design_inputs, input_flag) {
     top_idx <- order(d_user)[seq_len(min(5, length(d_user)))]
     top_ids <- X_sel$trial_id[top_idx]
     
-    # Return one observed final-risk point per matched trial for plotting and
-    # export alongside the modelled risk curve.
+    # Return one observed final-risk point per matched trial
     attrisk_trials %>%
       filter(.data$trial_id %in% top_ids) %>%
       group_by(.data$trial_id) %>%

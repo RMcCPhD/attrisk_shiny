@@ -1,12 +1,8 @@
 
-# Conduct-stage output packaging.
-#
-# These helpers collect the selected conduct outputs, write them to a temporary
-# folder, zip that folder, and expose the zip through a Shiny download button.
+# Conduct-stage output packaging
 
+# Create a zip archive from a generated outputs
 zip_dir <- function(dir_path) {
-  # Create a zip archive from a generated output directory. The zip package is
-  # preferred for Windows path handling, with utils::zip as a fallback.
   zip_path <- tempfile(fileext = ".zip")
   dir_path <- normalizePath(dir_path, winslash = "/", mustWork = TRUE)
   if (requireNamespace("zip", quietly = TRUE)) {
@@ -31,14 +27,11 @@ init_save_outputs2 <- function(
     conduct_inputs,           # User inputs (design features, characteristics)
     base_dir = "saved_outputs"
 ) {
-  # Track the latest temporary output folder and archive until the user has
-  # downloaded them or the modal is dismissed.
   lastSaveDir <- reactiveVal(NULL)
   lastZipPath <- reactiveVal(NULL)
   savedStamp  <- reactiveVal(NULL)
   
-  # Activate the save button only when the user has opted in and selected at
-  # least one output.
+  # Activate the save button
   observe({
     shinyjs::toggleState(
       "savebtn2",
@@ -52,8 +45,6 @@ init_save_outputs2 <- function(
       zp <- lastZipPath()
       sd <- lastSaveDir()
       
-      # After the browser receives the archive, clean up temporary app-side
-      # files so repeated saves do not accumulate stale folders.
       on.exit({
         if (!is.null(zp) && file.exists(zp)) {
           try(unlink(zp), silent = TRUE)
@@ -91,8 +82,6 @@ init_save_outputs2 <- function(
     dir.create(saveDir, recursive = TRUE, showWarnings = FALSE)
     lastSaveDir(saveDir)
     
-    # Generate only the selected artefacts. Feature/characteristic inputs are
-    # always included so downloaded outputs are traceable to the scenario.
     withProgress(message = "Generating outputs...", value = 0, {
       
       if ("Risk plot" %in% input$save_select2) {
@@ -120,7 +109,7 @@ init_save_outputs2 <- function(
     lastZipPath(normalizePath(zip_path, winslash = "/", mustWork = TRUE))
     file_list <- list.files(saveDir)
 
-    # Let the user download the prepared archive from the modal.
+    # Let the user they can download materials
     showModal(
       modalDialog(
         title = "Your outputs are ready",

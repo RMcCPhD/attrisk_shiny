@@ -46,7 +46,6 @@
   white-space: nowrap;
 }
 
-/* Optional: if you embed DT or long code, avoid x-overflow within cells */
 .box-scroller pre, 
 .box-scroller code, 
 .box-scroller .dt-container {

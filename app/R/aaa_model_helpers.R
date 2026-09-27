@@ -1,28 +1,21 @@
 
-# Shared model helpers for the Shiny backend.
-#
-# This file is the bridge between the user-facing Shiny inputs and the model
-# objects exported from attrisk/. It loads the exported posterior draws and
-# calibration objects once, maps UI choices into the model matrix columns, and
-# provides common Gompertz prediction helpers used by both app stages.
-
+# Shared model helpers for Shiny backend
+# Bridges Shiny and model outputs from attrisk/
 library(tidyverse)
 library(posterior)
 
 
-# Simple null-coalescing helper used when exported objects have fallback fields.
+# Simple null-coalescing helper when exports might have multiple fields
 `%||%` <- function(x, y) {
   if (is.null(x) || length(x) == 0 || all(is.na(x))) y else x
 }
 
 attrisk_data_path <- function(file) file.path("www", "data", file)
 
-# Exported design-stage and conduct-stage objects. These are refreshed by
-# tools/export_attrisk_app_data.R after the attrisk pipeline is rerun.
+# Exported design-stage and conduct-stage objects
 attrisk_design_draws <- readRDS(attrisk_data_path("design_draws.rds"))
 attrisk_design_df <- readRDS(attrisk_data_path("design_df.rds"))
 attrisk_trials <- readRDS(attrisk_data_path("trials.rds"))
-attrisk_shape_rate <- readRDS(attrisk_data_path("shape_rate.rds"))
 
 attrisk_conduct_scale <- readr::read_csv(
   attrisk_data_path("conduct_scale.csv"),
@@ -31,7 +24,7 @@ attrisk_conduct_scale <- readr::read_csv(
 attrisk_delta_draws <- readRDS(attrisk_data_path("delta_draws.rds"))
 attrisk_sobol <- readRDS(attrisk_data_path("sobol_lst.rds"))
 
-# Map design model matrix columns to their Stan beta draw names.
+# Map design model matrix columns to their Stan beta draw names
 attrisk_design_terms <- colnames(attrisk_design_df$X)
 attrisk_design_map <- tibble(
   param = attrisk_design_terms,
@@ -42,7 +35,7 @@ attrisk_design_map <- tibble(
 attrisk_draws_mat <- as_draws_matrix(attrisk_design_draws)
 attrisk_draw_names <- colnames(attrisk_draws_mat)
 
-# Fail early if the app data bundle is internally inconsistent.
+# Fail early if the app data bundle is internally inconsistent
 attrisk_missing_betas <- setdiff(attrisk_design_map$beta_id, attrisk_draw_names)
 if (length(attrisk_missing_betas) > 0) {
   stop("Missing design beta draws: ", paste(attrisk_missing_betas, collapse = ", "))
@@ -52,18 +45,32 @@ attrisk_beta_draws <- attrisk_draws_mat[, attrisk_design_map$beta_id, drop = FAL
 attrisk_mu_mu1_draws <- as.numeric(attrisk_draws_mat[, "mu_mu1"])
 attrisk_tau_mu1_draws <- as.numeric(attrisk_draws_mat[, "tau_mu1"])
 
-# Shape model quantities exported from the attrisk Gompertz exploration. The
-# current design model relates Gompertz shape to log-rate; the fallback names
-# preserve compatibility with older exported bundles during development.
-attrisk_shape_alpha <- attrisk_shape_rate$shape_alpha %||% attrisk_design_df$alpha_shape
-attrisk_shape_lograte_beta <- attrisk_shape_rate$lograte_beta %||%
-  attrisk_shape_rate$beta_lograte %||%
-  attrisk_design_df$beta_lograte %||%
-  attrisk_shape_rate$rate_beta %||%
-  attrisk_design_df$beta_rate
-attrisk_shape_uncertainty <- attrisk_shape_rate$uncertainty %||% attrisk_design_df$resid_sd
+# Average fitted arm shapes within each posterior draw
+attrisk_shape_ids <- paste0("a[", seq_len(attrisk_design_df$I), "]")
+if (length(attrisk_shape_ids) == 0L ||
+    !all(attrisk_shape_ids %in% attrisk_draw_names)) {
+  stop("Missing fitted arm shape draws in the exported design model.")
+}
+attrisk_mean_shape_draws <- rowMeans(
+  attrisk_draws_mat[, attrisk_shape_ids, drop = FALSE]
+)
+if (any(!is.finite(attrisk_mean_shape_draws))) {
+  stop("Fitted arm shape draws must be finite.")
+}
 
-# Conduct calibration and participant-level log-HR terms.
+# Use the shape constants supplied to the design model
+attrisk_shape_fields <- c("alpha_shape", "beta_lograte", "resid_sd")
+if (!all(vapply(attrisk_shape_fields, function(name) {
+  value <- attrisk_design_df[[name]]
+  is.numeric(value) && length(value) == 1L && is.finite(value)
+}, logical(1))) || attrisk_design_df$resid_sd < 0) {
+  stop("Design data must contain finite alpha_shape, beta_lograte and nonnegative resid_sd constants.")
+}
+attrisk_shape_alpha <- attrisk_design_df$alpha_shape
+attrisk_shape_lograte_beta <- attrisk_design_df$beta_lograte
+attrisk_shape_uncertainty <- attrisk_design_df$resid_sd
+
+# Conduct calibration and participant-level log-HR terms
 attrisk_delta_mu <- rowMeans(attrisk_delta_draws, na.rm = TRUE)
 attrisk_conduct_terms <- names(attrisk_sobol$loghr)
 attrisk_conduct_loghrs <- tibble(
@@ -90,7 +97,7 @@ attrisk_first <- function(x) {
   x[[1]]
 }
 
-# Collapse Shiny vectors such as checkbox groups into a single display string.
+# Collapse Shiny vectors such as checkbox groups into a single display string
 attrisk_chr <- function(x) {
   if (is.null(x) || length(x) == 0) return(NA_character_)
   x <- as.character(x)
@@ -103,9 +110,7 @@ attrisk_num <- function(x) {
   suppressWarnings(as.numeric(attrisk_first(x)))
 }
 
-# Look up an input by prefixed UI id first, then by model-facing aliases. This
-# lets the backend tolerate either design_duration/conduct_duration ids or
-# direct covariate ids such as duration, durn, and chol_total.
+# Look up an input by prefixed UI id first, then by model-facing aliases
 attrisk_input_get <- function(input, prefix = NULL, id, aliases = character()) {
   suffixes <- unique(c(id, aliases))
   candidates <- suffixes
@@ -121,9 +126,7 @@ attrisk_input_get <- function(input, prefix = NULL, id, aliases = character()) {
   NULL
 }
 
-# Store both display-friendly input rows and model rows in the same tibble. The
-# prediction code consumes role == "model"; save/export code consumes role ==
-# "input".
+# Store input rows and model rows in the same tibble
 attrisk_input_row <- function(group, name, label, value, value_prep = value,
                               display_value = value, order = 999) {
   tibble(
@@ -167,7 +170,7 @@ attrisk_model_rows <- function(values, group = "model") {
   )
 }
 
-# Formatting helpers mirroring Logs/data_processing.xlsx sheet 3.
+# Formatting helpers
 attrisk_n_cat <- function(n) {
   case_when(
     is.na(n) ~ NA_character_,
@@ -275,9 +278,7 @@ attrisk_region_values <- function(value) {
   setNames(as.integer(out), names(out))
 }
 
-# Convert trial design UI inputs into two forms:
-# 1) display rows for saved outputs, and
-# 2) numeric model rows matching colnames(attrisk_design_df$X).
+# Convert trial design UI inputs
 attrisk_design_input_table <- function(input, prefix = "design") {
   get <- function(id, aliases = character()) {
     attrisk_input_get(input, prefix = prefix, id = id, aliases = aliases)
@@ -430,8 +431,7 @@ attrisk_scale_conduct <- function(name, value) {
   (value - scale_row$mu[[1]]) / scale_row$d[[1]]
 }
 
-# Convert participant-level conduct inputs to the centred/scaled covariates used
-# by the conduct calibration model. Raw values are retained for saved outputs.
+# Convert participant-level conduct inputs to the centred/scaled covariates
 attrisk_conduct_characteristic_table <- function(input) {
   get <- function(id, aliases = character()) {
     attrisk_input_get(input, prefix = "conduct", id = id, aliases = aliases)
@@ -539,8 +539,7 @@ attrisk_model_values <- function(input_param, terms) {
   values <- setNames(rep(0, length(terms)), terms)
 
   # Model terms not represented by the current UI are intentionally kept at the
-  # reference value of zero. Missing or non-numeric UI entries are dropped here
-  # to avoid max/summarise warnings when optional inputs are blank.
+  # reference value
   supplied <- input_param %>%
     filter(.data$role == "model", .data$param %in% terms) %>%
     transmute(
@@ -557,9 +556,7 @@ attrisk_model_values <- function(input_param, terms) {
   values
 }
 
-# Retrieve numeric display/input values such as duration and sample size from
-# the combined input table. Missing values become NA_real_ so shiny::req can
-# stop rendering gracefully.
+# Retrieve numeric display/input values and handle missing values
 attrisk_input_value <- function(input_param, name) {
   raw_value <- input_param %>%
     filter(.data$role == "input", .data$name == !!name) %>%
@@ -572,10 +569,6 @@ attrisk_input_value <- function(input_param, name) {
 
 attrisk_design_parameters <- function(input_param, include_new_trial_error = FALSE) {
 
-  # Typical predictions set the new-trial random effect and new shape residual
-  # to zero. Enabling the new-trial error argument gives marginal predictions
-  # for a new trial arm, but those intervals are too volatile for the
-  # proof-of-concept Shiny interface.
   x_vec <- attrisk_model_values(input_param, attrisk_design_terms)
   S <- nrow(attrisk_beta_draws)
   z_rate <- if (isTRUE(include_new_trial_error)) stats::rnorm(S) else rep(0, S)
@@ -583,18 +576,18 @@ attrisk_design_parameters <- function(input_param, include_new_trial_error = FAL
   log_rate <- attrisk_mu_mu1_draws + attrisk_tau_mu1_draws * z_rate + rate_lp
   rate <- exp(log_rate)
 
-  z_shape <- if (isTRUE(include_new_trial_error)) stats::rnorm(S) else rep(0, S)
-  # The exported attrisk design model now couples Gompertz shape to log-rate.
-  # This keeps the shape-rate relationship on the same linear scale used by the
-  # Stan model while avoiding the stronger natural-rate extrapolation effect.
-  shape <- attrisk_shape_alpha + attrisk_shape_lograte_beta * log_rate +
-    attrisk_shape_uncertainty * z_shape
+  shape <- if (isTRUE(include_new_trial_error)) {
+    attrisk_shape_alpha + attrisk_shape_lograte_beta * log_rate +
+      attrisk_shape_uncertainty * stats::rnorm(S)
+  } else {
+    attrisk_mean_shape_draws
+  }
 
   list(log_rate = log_rate, rate = rate, shape = shape, x = x_vec)
 
 }
 
-# Gompertz CDF/hazard wrappers keep the parameterisation in one place.
+# Gompertz CDF/hazard wrappers
 attrisk_gompertz_cdf <- function(t, shape, rate) {
   flexsurv::pgompertz(t, shape = shape, rate = rate)
 }
@@ -611,8 +604,7 @@ attrisk_time_grid <- function(input_param) {
   tibble(t_yrs = t_yrs, t_wks = t_yrs * 52)
 }
 
-# Convert per-draw Gompertz parameters into the tibble consumed by plots,
-# summaries, and saved output functions.
+# Convert per-draw Gompertz parameters into the tibble used by plots
 attrisk_prediction_table <- function(log_rate, shape, input_param,
                                      include_hazard = TRUE) {
   rate <- exp(log_rate)
@@ -665,8 +657,6 @@ attrisk_prediction_table <- function(log_rate, shape, input_param,
 }
 
 attrisk_feature_table <- function(inputs, value_col_name) {
-  # Saved feature tables use only the display rows; the model rows are internal
-  # bookkeeping for prediction and should not be shown to the user.
   inputs %>%
     filter(.data$role == "input") %>%
     mutate(

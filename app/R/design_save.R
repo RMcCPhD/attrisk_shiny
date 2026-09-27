@@ -1,13 +1,6 @@
 
-# Design-stage output packaging.
-#
-# These helpers collect whichever design outputs the user selected, write them
-# to a temporary folder, zip that folder, and expose the zip through a Shiny
-# download button.
-
+# Design-stage output packaging
 zip_dir <- function(dir_path) {
-  # Create a zip archive from a generated output directory. The zip package is
-  # preferred for Windows path handling, with utils::zip as a fallback.
   zip_path <- tempfile(fileext = ".zip")
   dir_path <- normalizePath(dir_path, winslash = "/", mustWork = TRUE)
   if (requireNamespace("zip", quietly = TRUE)) {
@@ -35,14 +28,10 @@ init_save_outputs <- function(
     overlay_flag = reactive(isTRUE(input$overlay_top5)),
     base_dir = "saved_outputs"
 ) {
-  # Track the latest temporary output folder and archive until the user has
-  # downloaded them or the modal is dismissed.
   lastSaveDir <- reactiveVal(NULL)
   lastZipPath <- reactiveVal(NULL)
   savedStamp  <- reactiveVal(NULL)
   
-  # Activate the save button only when the user has opted in and selected at
-  # least one output.
   observe({
     shinyjs::toggleState(
       "savebtn",
@@ -56,8 +45,6 @@ init_save_outputs <- function(
       zp <- lastZipPath()
       sd <- lastSaveDir()
       
-      # After the browser receives the archive, clean up temporary app-side
-      # files so repeated saves do not accumulate stale folders.
       on.exit({
         if (!is.null(zp) && file.exists(zp)) {
           try(unlink(zp), silent = TRUE)
@@ -102,8 +89,6 @@ init_save_outputs <- function(
     dir.create(saveDir, recursive = TRUE, showWarnings = FALSE)
     lastSaveDir(saveDir)
     
-    # Generate only the selected artefacts. Design features are always included
-    # so downloaded outputs are traceable to the input scenario.
     withProgress(message = "Generating outputs...", value = 0, {
       
       if ("Risk plot" %in% input$save_select) {
@@ -117,8 +102,6 @@ init_save_outputs <- function(
       }
       
       if (overlay) {
-        # Save the nearest-neighbour trials only when they were shown on the
-        # design risk plot.
         d5_save <- d5 %>% 
           mutate(duration = round(duration, 2)) %>% 
           rename(
@@ -157,7 +140,6 @@ init_save_outputs <- function(
     lastZipPath(normalizePath(zip_path, winslash = "/", mustWork = TRUE))
     file_list <- list.files(saveDir)
 
-    # Let the user download the prepared archive from the modal.
     showModal(
       modalDialog(
         title = "Your outputs are ready",
